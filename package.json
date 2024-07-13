@@ -1,7 +1,9 @@
 {
   "name": "dom-scope",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Creates a scope within the DOM",
+  "homepage": "https://github.com/supercat1337/dom-scope",
+  "repository": {"url": "https://github.com/supercat1337/dom-scope"},
   "main": "index.js",
   "type": "module",
   "keywords": [
