@@ -21,7 +21,7 @@ You can assign local identifiers to child elements using the ref attribute.
 
 ### basic example
 
-html```
+```html
 <body>
     <span ref="a">a</span>
     <span ref="b">b</span>
@@ -46,7 +46,7 @@ html```
 </body>
 ```
 
-js```
+```js
 // @ts-check
 import { DomScope } from "@supercat1337/dom-scope";
 
@@ -79,7 +79,7 @@ console.log(another_scope.contains(foo_element));
 ```
 
 Also you can walk through all elements in the scope 
-js```
+```js
 // @ts-check
 import { DomScope } from "@supercat1337/dom-scope";
 
