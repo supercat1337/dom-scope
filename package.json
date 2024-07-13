@@ -1,6 +1,6 @@
 {
   "name": "dom-scope",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Creates a scope within the DOM",
   "main": "index.js",
   "type": "module",
