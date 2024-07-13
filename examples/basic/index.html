@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "@supercat1337/dom-scope": "./../../dist/index.esm.js"
+          }
+        }
+    </script>
+</head>
+
+<body>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
+
+    <div scope-name="my-scope-1">
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
+    </div>
+    
+    <div scope-name="my-scope-2" id="my-block">    
+        <span ref="a">a/2</span>
+        <span ref="b">b/2</span>
+        <span id="foo">foo</span>
+
+        <div scope-name="my-scope">    
+            <span ref="a">a/2/1</span>
+            <span ref="b">b/2/1</span>
+        </div>
+
+        <div scope-name="my-scope-2">    
+            <span ref="a">a/2/2</span>
+            <span ref="b">b/2/2</span>
+        </div>
+
+    </div>
+
+    <script src="index.js" type="module"></script>
+</body>
+
+</html>
