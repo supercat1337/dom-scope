@@ -1,7 +1,7 @@
 // @ts-check
 
 import { DomScope } from "./../../dist/dom-scope.esm.js";
-//import { DomScope } from "@supercat1337/dom-scope";
+//import { DomScope } from "dom-scope";
 
 let scope = new DomScope(document.body);
 console.log(scope.root == document.body);

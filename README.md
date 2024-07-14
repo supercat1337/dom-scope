@@ -48,7 +48,7 @@ You can assign local identifiers to child elements using the ref attribute.
 
 ```js
 // @ts-check
-import { DomScope } from "@supercat1337/dom-scope";
+import { DomScope } from "dom-scope";
 
 let scope = new DomScope(document.body);
 console.log(scope.root == document.body);
@@ -81,7 +81,7 @@ console.log(another_scope.contains(foo_element));
 Also you can walk through all elements in the scope 
 ```js
 // @ts-check
-import { DomScope } from "@supercat1337/dom-scope";
+import { DomScope } from "dom-scope";
 
 /**
  * @param {HTMLElement} element 
@@ -142,7 +142,7 @@ Also you can work with custom scopes.
 
 ```js
 // @ts-check
-import { DomScope } from "@supercat1337/dom-scope";
+import { DomScope } from "dom-scope";
 
 let scope = new DomScope(document.body);
 
