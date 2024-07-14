@@ -8,7 +8,7 @@ const REF_ATTR_NAME = 'ref';
 
 /** 
  * @typedef {{scope_attr_name?:string, ref_attr_name?:string, document?: *, is_scope_element?: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeDomScopeOptions
- * @typedef {{scope_attr_name:string, ref_attr_name:string, document: *, is_scope_element: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeAllDomScopeOptions
+ * @typedef {{scope_attr_name:string, ref_attr_name:string, document: *, is_scope_element?: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeAllDomScopeOptions
 */
 
 /**

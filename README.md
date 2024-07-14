@@ -120,7 +120,7 @@ DIV scope-name=my-scope-2
 */
 ```
 
-Also you can custom scopes.
+Also you can work with custom scopes.
 ```html
 <body>
     <span ref="a">a</span>

@@ -2,11 +2,13 @@ export type TypeDomScopeOptions = {
     scope_attr_name?: string;
     ref_attr_name?: string;
     document?: any;
+    is_scope_element?: (element: HTMLElement, options: TypeAllDomScopeOptions) => string | false;
 };
 export type TypeAllDomScopeOptions = {
     scope_attr_name: string;
     ref_attr_name: string;
     document: any;
+    is_scope_element?: (element: HTMLElement, options: TypeAllDomScopeOptions) => string | false;
 };
 export type TypeDomScope = DomScope;
 /** @typedef {DomScope} TypeDomScope */
