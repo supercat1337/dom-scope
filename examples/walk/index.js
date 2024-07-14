@@ -1,6 +1,6 @@
 // @ts-check
 
-import { DomScope } from "./../../dist/index.esm.js";
+import { DomScope } from "./../../dist/dom-scope.esm.js";
 //import { DomScope } from "@supercat1337/dom-scope";
 
 /**

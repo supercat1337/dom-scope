@@ -5,18 +5,45 @@
 const SCOPE_ATTR_NAME = 'scope-name';
 const REF_ATTR_NAME = 'ref';
 
+
 /** 
- * @typedef {{scope_attr_name?:string, ref_attr_name?:string, document?: *}} TypeDomScopeOptions
- * @typedef {{scope_attr_name:string, ref_attr_name:string, document: *}} TypeAllDomScopeOptions
+ * @typedef {{scope_attr_name?:string, ref_attr_name?:string, document?: *, is_scope_element?: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeDomScopeOptions
+ * @typedef {{scope_attr_name:string, ref_attr_name:string, document: *, is_scope_element: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeAllDomScopeOptions
 */
+
+/**
+ * 
+ * @param {HTMLElement} element 
+ * @param {TypeAllDomScopeOptions} options 
+ * @returns {false|string} returns scope name
+ */
+function isScopeElement(element, options, default_name = "default") {
+
+    var value;
+    if (options.is_scope_element) {
+        value = options.is_scope_element(element, options);
+    } else {
+        value = element.getAttribute(options.scope_attr_name);
+    }
+
+    if (value === null) return false;
+    if (value === "") return default_name;
+
+    return value;
+}
 
 /**
  * 
  * @param {TypeDomScopeOptions} [options] 
  * @returns {TypeAllDomScopeOptions}
  */
-function getOptions(options){
-    return Object.assign({}, {scope_attr_name: SCOPE_ATTR_NAME, ref_attr_name: REF_ATTR_NAME, document: null}, options);
+function getOptions(options) {
+    return Object.assign({}, {
+        scope_attr_name: SCOPE_ATTR_NAME,
+        ref_attr_name: REF_ATTR_NAME,
+        document: null,
+        is_scope_element: undefined
+    }, options);
 }
 
 /**
@@ -33,7 +60,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
     /** @type {{[key:string]:HTMLElement}} */
     var scope_refs = {};
-    
+
     var _options = getOptions(options);
 
     /**
@@ -44,15 +71,28 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
         var ref_name = currentNode.getAttribute(_options.ref_attr_name);
 
-        if (ref_name) {
-            refs[ref_name] = currentNode;
+        if (ref_name != null) {
+            if (ref_name != "") {
+                if (!refs[ref_name]) {
+                    refs[ref_name] = currentNode;
+                } else {
+                    console.warn(`ref #${ref_name} is already used`);
+                }
+            }
         }
 
         if (currentNode != root_element) {
-            var ref_scope_name = currentNode.getAttribute(_options.scope_attr_name);
+            var ref_scope_name = isScopeElement(currentNode, _options);
 
-            if (ref_scope_name) {
-                scope_refs[ref_scope_name] = currentNode;
+            if (typeof ref_scope_name == "string") {
+                if (ref_scope_name == "") ref_scope_name = "default";
+
+                if (!scope_refs[ref_scope_name]) {
+                    scope_refs[ref_scope_name] = currentNode;
+                } else {
+                    console.warn(`scope #${ref_scope_name} is already used`);
+                }
+
             }
         }
 
@@ -111,13 +151,13 @@ export function walkDomScope(root_element, callback, options) {
 
         var parentElement = node.parentElement;
 
-        if (parentElement && parentElement.hasAttribute(_options.scope_attr_name) && parentElement != root_element) {
+        if (parentElement && parentElement != root_element && isScopeElement(parentElement, _options)) {
             return /* NodeFilter.FILTER_REJECT */ 2
         }
 
         return /* NodeFilter.FILTER_ACCEPT */ 1
     }
-    
+
     const tw = (_options.document || root_element.ownerDocument).createTreeWalker(root_element, /* NodeFilter.SHOW_ELEMENT */ 1, scope_filter);
 
     var currentNode;
@@ -160,7 +200,7 @@ export class DomScope {
      *
      * @type {HTMLElement}
      */
-    get root(){
+    get root() {
         return this.#root_element;
     }
 
@@ -241,7 +281,7 @@ export class DomScope {
         var result = [];
 
         for (let i = 0; i < found_results.length; i++) {
-            if (this.contains(found_results[i], true)) result.push( /** @type {HTMLElement} */ (found_results[i]) );
+            if (this.contains(found_results[i], true)) result.push( /** @type {HTMLElement} */(found_results[i]));
         }
 
         return result;
@@ -284,10 +324,10 @@ export class DomScope {
     /**
      * Destroys the instance 
      */
-    destroy(){
+    destroy() {
         // @ts-ignore
         this.#root_element = null;
-        
+
         this.#first_time_call = false;
         this.#refs = {};
         this.#scopes = {};

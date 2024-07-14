@@ -4,10 +4,6 @@ import { DomScope, selectRefs, selectRefsExtended, walkDomScope } from "./../src
 import test from "./../node_modules/ava/entrypoints/main.mjs";
 import { Window } from 'happy-dom';
 
-const window = new Window({ url: 'https://localhost:8080' });
-const document = window.document;
-const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-
 /**
  * @param {HTMLElement} element 
  */
@@ -16,6 +12,9 @@ function outputElementInfo(element) {
     return `${element.tagName} ${attrs}`
 }
 
+const window = new Window({ url: 'https://localhost:8080' });
+const document = window.document;
+const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
 body.innerHTML = /* html*/`
 <span ref="a">a</span>
@@ -220,4 +219,86 @@ test("DomScope (destroy)", t => {
     } catch (e) {
         t.pass();
     }
+});
+
+test("DomScope (dublicate ref and scopes)", t => {
+
+    let scope = new DomScope(body);
+    scope.options.document = document;
+
+    body.insertAdjacentHTML("beforeend", /* html */`
+        <span ref="a" dublicated></span>
+        <div scope-name="my-scope-1" dublicated>
+        </div>
+    `);
+
+    let refs = scope.refs;
+    let scopes = scope.scopes;
+    
+    if (refs.a.hasAttribute("dublicate")) {
+        t.fail();
+        return;
+    }
+
+    if (scopes["my-scope-1"].root.hasAttribute("dublicate")) {
+        t.fail();
+        return;
+    }
+
+    t.pass();
+});
+
+test("DomScope (custom scopes)", t => {
+
+    const window = new Window({ url: 'https://localhost:8081' });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+
+    body.innerHTML = /* html*/`
+    <span ref="a">a</span>
+    <span ref="b">b</span>
+
+    <div custom-scope-attribute="custom_scope_name">
+        <span ref="a">a in custom_scope_name</span>
+        <slot>
+            <span ref="a">slot</span>
+        </slot>
+        <slot name="slot2">
+            <span ref="a">a slot2</span>
+        </slot>
+    </div>
+    `;
+
+    let scope = new DomScope(body);
+    scope.options.document = document;
+
+    scope.options.is_scope_element = function (element) {
+        if (element.tagName == "SLOT") {
+            return element.getAttribute("name") || "";
+        }
+
+        if (element.hasAttribute("custom-scope-attribute")) {
+            return element.getAttribute("custom-scope-attribute") || "";
+        }
+
+        return false;
+    }
+
+    if (!scope.scopes["custom_scope_name"]) {
+        t.fail("custom_scope_name not found");
+    }
+
+    let scopes = scope.scopes;
+
+    let scope_1 = scopes["custom_scope_name"];
+
+    if (!scope_1.scopes["default"]) {
+        t.fail("custom_scope_name.default not found");
+    }
+
+    if (!scope_1.scopes["slot2"]) {
+        t.fail("custom_scope_name.slot2 not found");
+    }
+    
+    t.pass();
 });

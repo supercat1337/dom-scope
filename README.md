@@ -119,3 +119,58 @@ DIV scope-name=my-scope
 DIV scope-name=my-scope-2
 */
 ```
+
+Also you can custom scopes.
+```html
+<body>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
+
+    <div custom-scope-attribute="custom_scope_name">
+        <span ref="a">a in custom_scope_name</span>
+        <slot>
+            <span ref="a">slot</span>
+        </slot>
+        <slot name="slot2">
+            <span ref="a">a slot2</span>
+        </slot>
+    </div>
+
+    <script src="index.js" type="module"></script>
+</body>
+```
+
+```js
+// @ts-check
+import { DomScope } from "@supercat1337/dom-scope";
+
+let scope = new DomScope(document.body);
+
+scope.options.is_scope_element = function (element) {
+    if (element.tagName == "SLOT") {
+        return element.getAttribute("name") || "";
+    }
+
+    if (element.hasAttribute("custom-scope-attribute")) {
+        return element.getAttribute("custom-scope-attribute") || "";
+    }
+
+    return false;
+}
+
+if (!scope.scopes["custom_scope_name"]) {
+    console.error("custom_scope_name not found");
+}
+
+let scopes = scope.scopes;
+
+let scope_1 = scopes["custom_scope_name"];
+
+if (!scope_1.scopes["default"]) {
+    console.error("custom_scope_name.default not found");
+}
+
+if (!scope_1.scopes["slot2"]) {
+    console.error("custom_scope_name.slot2 not found");
+}
+```
