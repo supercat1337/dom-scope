@@ -15,17 +15,17 @@ export type TypeDomScope = DomScope;
 export class DomScope {
     /**
      *
-     * @param {HTMLElement} root_element the root element
+     * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
      */
-    constructor(root_element: HTMLElement);
+    constructor(root_element: HTMLElement | DocumentFragment | ShadowRoot);
     /** @type {TypeDomScopeOptions} */
     options: TypeDomScopeOptions;
     /**
      * Get root element
      *
-     * @type {HTMLElement}
+     * @type {HTMLElement|DocumentFragment|ShadowRoot}
      */
-    get root(): HTMLElement;
+    get root(): HTMLElement | ShadowRoot | DocumentFragment;
     /**
      * get the object contains html elements with ref attribute
      * @type {{[key:string]:HTMLElement}}
@@ -77,20 +77,20 @@ export class DomScope {
 }
 /**
  * Returns an object of child elements containing the ref attribute
- * @param {HTMLElement} root_element
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {TypeDomScopeOptions} [options]
  */
-export function selectRefs(root_element: HTMLElement, options?: TypeDomScopeOptions): {
+export function selectRefs(root_element: HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions): {
     [key: string]: HTMLElement;
 };
 /**
  *
- * @param {HTMLElement} root_element
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} [custom_callback]
  * @param {TypeDomScopeOptions} [options]
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
-export function selectRefsExtended(root_element: HTMLElement, custom_callback?: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): {
+export function selectRefsExtended(root_element: HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): {
     refs: {
         [key: string]: HTMLElement;
     };
@@ -100,9 +100,9 @@ export function selectRefsExtended(root_element: HTMLElement, custom_callback?: 
 };
 /**
  *
- * @param {HTMLElement} root_element
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} callback
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
  */
-export function walkDomScope(root_element: HTMLElement, callback: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): void;
+export function walkDomScope(root_element: HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): void;
 //# sourceMappingURL=dom-scope.esm.d.ts.map

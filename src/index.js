@@ -48,7 +48,7 @@ function getOptions(options) {
 
 /**
  * 
- * @param {HTMLElement} root_element 
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} [custom_callback] 
  * @param {TypeDomScopeOptions} [options] 
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
@@ -107,7 +107,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
 /**
  * Returns an object of child elements containing the ref attribute
- * @param {HTMLElement} root_element 
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {TypeDomScopeOptions} [options] 
  */
 export function selectRefs(root_element, options) {
@@ -134,7 +134,7 @@ export function selectRefs(root_element, options) {
 
 /**
  * 
- * @param {HTMLElement} root_element 
+ * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} callback 
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
  */
@@ -172,7 +172,7 @@ export function walkDomScope(root_element, callback, options) {
 
 export class DomScope {
 
-    /** @type {HTMLElement} */
+    /** @type {HTMLElement|DocumentFragment|ShadowRoot} */
     #root_element
 
     /** @type {Boolean} */
@@ -189,7 +189,7 @@ export class DomScope {
 
     /**
      * 
-     * @param {HTMLElement} root_element the root element
+     * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
      */
     constructor(root_element) {
         this.#root_element = root_element;
@@ -198,7 +198,7 @@ export class DomScope {
     /**
      * Get root element
      *
-     * @type {HTMLElement}
+     * @type {HTMLElement|DocumentFragment|ShadowRoot}
      */
     get root() {
         return this.#root_element;

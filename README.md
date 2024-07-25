@@ -46,6 +46,64 @@ You can assign local identifiers to child elements using the ref attribute.
 </body>
 ```
 
+#### scope.refs
+
+```js
+// @ts-check
+import { DomScope } from "dom-scope";
+
+/**
+ * @param {DomScope} scope 
+ */
+function showRefsText(scope) {
+    let { a, b } = scope.refs;
+    console.log(a.innerText, b.innerText);
+}
+
+let scope = new DomScope(document.body);
+showRefsText(scope);
+// outputs: a b
+
+let my_block = /** @type {HTMLElement} */ (document.querySelector("#my-block"));
+let scope_2 = new DomScope(my_block);
+showRefsText(scope_2);
+// outputs: a/2 b/2
+```
+
+
+#### scope.querySelectorAll
+
+```js
+// @ts-check
+import { DomScope } from "dom-scope";
+
+/**
+ * @param {HTMLElement} element 
+ */
+function outputElementInfo(element) {
+    let attrs = element.getAttributeNames().map(attr_name=>attr_name + "=" + element.getAttribute(attr_name)).join(" ");
+    return `${element.tagName} ${attrs}`
+}
+
+let scope = new DomScope(document.body);
+
+let refs_array = scope.querySelectorAll("[ref],[scope-name]");
+
+refs_array.forEach((element)=>{
+    console.log(outputElementInfo(element));
+});
+
+/*
+outputs:
+SPAN ref=a
+SPAN ref=b
+DIV scope-name=my-scope-1
+DIV scope-name=my-scope-2 id=my-block
+*/
+```
+
+#### Working with scopes
+
 ```js
 // @ts-check
 import { DomScope } from "dom-scope";
@@ -120,7 +178,8 @@ DIV scope-name=my-scope-2
 */
 ```
 
-Also you can work with custom scopes.
+#### Custom scopes
+
 ```html
 <body>
     <span ref="a">a</span>
