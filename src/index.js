@@ -2,32 +2,33 @@
 
 /** @module DomScope */
 
-const SCOPE_ATTR_NAME = 'scope-name';
-const REF_ATTR_NAME = 'ref';
+const SCOPE_ATTR_NAME = "data-scope";
+const SCOPE_AUTO_NAME_PREFIX = "$";
+const REF_ATTR_NAME = "data-ref";
 
 
 /** 
- * @typedef {{scope_attr_name?:string, ref_attr_name?:string, document?: *, is_scope_element?: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeDomScopeOptions
- * @typedef {{scope_attr_name:string, ref_attr_name:string, document: *, is_scope_element?: (element:HTMLElement, options:TypeAllDomScopeOptions)=>string|false}} TypeAllDomScopeOptions
+ * @typedef {(element:HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
+ * @typedef {{ref_attr_name?:string, document?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeDomScopeOptions
+ * @typedef {{ref_attr_name:string, document: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeAllDomScopeOptions
 */
 
 /**
  * 
  * @param {HTMLElement} element 
  * @param {TypeAllDomScopeOptions} options 
- * @returns {false|string} returns scope name
+ * @returns {false|string} returns scope name or false
  */
-function isScopeElement(element, options, default_name = "default") {
+function isScopeElement(element, options) {
 
     var value;
     if (options.is_scope_element) {
         value = options.is_scope_element(element, options);
     } else {
-        value = element.getAttribute(options.scope_attr_name);
+        value = element.getAttribute(SCOPE_ATTR_NAME);
     }
 
     if (value === null) return false;
-    if (value === "") return default_name;
 
     return value;
 }
@@ -38,12 +39,15 @@ function isScopeElement(element, options, default_name = "default") {
  * @returns {TypeAllDomScopeOptions}
  */
 function getOptions(options) {
-    return Object.assign({}, {
-        scope_attr_name: SCOPE_ATTR_NAME,
+    /** @type {TypeAllDomScopeOptions} */
+    let init_data = {
         ref_attr_name: REF_ATTR_NAME,
         document: null,
-        is_scope_element: undefined
-    }, options);
+        is_scope_element: undefined,
+        default_scope_name: undefined
+    };
+
+    return Object.assign({}, init_data, options);
 }
 
 /**
@@ -61,6 +65,9 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
     /** @type {{[key:string]:HTMLElement}} */
     var scope_refs = {};
 
+    /** @type {HTMLElement[]} */
+    var unnamed_scopes = [];
+
     var _options = getOptions(options);
 
     /**
@@ -76,7 +83,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
                 if (!refs[ref_name]) {
                     refs[ref_name] = currentNode;
                 } else {
-                    console.warn(`ref #${ref_name} is already used`);
+                    console.warn(`data-ref #${ref_name} is already used`);
                 }
             }
         }
@@ -84,16 +91,20 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
         if (currentNode != root_element) {
             var ref_scope_name = isScopeElement(currentNode, _options);
 
-            if (typeof ref_scope_name == "string") {
-                if (ref_scope_name == "") ref_scope_name = "default";
+            if (typeof ref_scope_name != "string") return;
 
+            if (ref_scope_name != "") {
                 if (!scope_refs[ref_scope_name]) {
                     scope_refs[ref_scope_name] = currentNode;
                 } else {
                     console.warn(`scope #${ref_scope_name} is already used`);
+                    unnamed_scopes.push(currentNode);
                 }
-
+            } else {
+                unnamed_scopes.push(currentNode);
             }
+
+
         }
 
         if (custom_callback) custom_callback(currentNode);
@@ -102,11 +113,20 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
     walkDomScope(root_element, callback, _options);
 
+    var index = 0;
+    unnamed_scopes.forEach((unnamed_scope_element) => {
+        while (scope_refs[SCOPE_AUTO_NAME_PREFIX + index.toString()]) {
+            index++;
+        }
+
+        scope_refs[SCOPE_AUTO_NAME_PREFIX + index.toString()] = unnamed_scope_element;
+    });
+
     return { refs, scope_refs };
 }
 
 /**
- * Returns an object of child elements containing the ref attribute
+ * Returns an object of child elements containing the data-ref attribute
  * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {TypeDomScopeOptions} [options] 
  */
@@ -151,7 +171,7 @@ export function walkDomScope(root_element, callback, options) {
 
         var parentElement = node.parentElement;
 
-        if (parentElement && parentElement != root_element && isScopeElement(parentElement, _options)) {
+        if (parentElement && parentElement != root_element && isScopeElement(parentElement, _options) !== false) {
             return /* NodeFilter.FILTER_REJECT */ 2
         }
 
@@ -190,9 +210,11 @@ export class DomScope {
     /**
      * 
      * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
+     * @param {TypeDomScopeOptions} [options={}] 
      */
-    constructor(root_element) {
+    constructor(root_element, options = {}) {
         this.#root_element = root_element;
+        this.options = options;
     }
 
     /**
@@ -205,7 +227,7 @@ export class DomScope {
     }
 
     /** 
-     * get the object contains html elements with ref attribute  
+     * get the object contains html elements with data-ref attribute  
      * @type {{[key:string]:HTMLElement}} 
      * */
     get refs() {
@@ -333,4 +355,15 @@ export class DomScope {
         this.#scopes = {};
         this.options = {};
     }
+
+    /**
+     * Checks if element is scope
+     * @param {HTMLElement} element 
+     * @returns {boolean}
+     */
+    isScopeElement(element) {
+        let options = getOptions(this.options);
+        return !!isScopeElement(element, options);
+    }
 }
+

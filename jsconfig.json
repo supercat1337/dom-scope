@@ -1,10 +1,6 @@
 {
     "compilerOptions": {
       "baseUrl": ".",
-      "paths": {
-        "src/*": ["./src/*"],
-        "dom-scope": ["./src/index.js"]
-      },
       "target": "ESNext",
       "module": "NodeNext",
       "noEmit": true,
@@ -14,7 +10,6 @@
         ],
         "moduleResolution": "NodeNext"
     },
-    //Add any build/compiled folders here to stop vscode searching those
     "exclude": ["dist/*"],
     "include": ["src/index.js", "node_modules/*"]
 }

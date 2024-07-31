@@ -1,14 +1,15 @@
+export type TypeIsScopeElement = (element: HTMLElement, options: TypeAllDomScopeOptions) => string | null | false;
 export type TypeDomScopeOptions = {
-    scope_attr_name?: string;
     ref_attr_name?: string;
     document?: any;
-    is_scope_element?: (element: HTMLElement, options: TypeAllDomScopeOptions) => string | false;
+    is_scope_element?: TypeIsScopeElement;
+    default_scope_name?: string | (() => string);
 };
 export type TypeAllDomScopeOptions = {
-    scope_attr_name: string;
     ref_attr_name: string;
     document: any;
-    is_scope_element?: (element: HTMLElement, options: TypeAllDomScopeOptions) => string | false;
+    is_scope_element?: TypeIsScopeElement;
+    default_scope_name?: string | (() => string);
 };
 export type TypeDomScope = DomScope;
 /** @typedef {DomScope} TypeDomScope */
@@ -16,8 +17,9 @@ export class DomScope {
     /**
      *
      * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
+     * @param {TypeDomScopeOptions} [options={}]
      */
-    constructor(root_element: HTMLElement | DocumentFragment | ShadowRoot);
+    constructor(root_element: HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions);
     /** @type {TypeDomScopeOptions} */
     options: TypeDomScopeOptions;
     /**
@@ -27,7 +29,7 @@ export class DomScope {
      */
     get root(): HTMLElement | ShadowRoot | DocumentFragment;
     /**
-     * get the object contains html elements with ref attribute
+     * get the object contains html elements with data-ref attribute
      * @type {{[key:string]:HTMLElement}}
      * */
     get refs(): {
@@ -73,10 +75,16 @@ export class DomScope {
      * Destroys the instance
      */
     destroy(): void;
+    /**
+     * Checks if element is scope
+     * @param {HTMLElement} element
+     * @returns {boolean}
+     */
+    isScopeElement(element: HTMLElement): boolean;
     #private;
 }
 /**
- * Returns an object of child elements containing the ref attribute
+ * Returns an object of child elements containing the data-ref attribute
  * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {TypeDomScopeOptions} [options]
  */

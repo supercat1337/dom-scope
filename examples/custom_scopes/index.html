@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="importmap">
+        {
+          "imports": {
+            "dom-scope": "./../../dist/index.esm.js"
+          }
+        }
+    </script>
+</head>
+
+<body>
+    <span data-ref="a">a</span>
+    <span data-ref="b">b</span>
+
+    <div custom-scope-attribute="custom_scope_name">
+        <span data-ref="a">a in custom_scope_name</span>
+        <slot>
+            <span data-ref="a">slot</span>
+        </slot>
+        <slot name="slot2">
+            <span data-ref="a">a slot2</span>
+        </slot>
+    </div>
+
+    <script src="index.js" type="module"></script>
+</body>
+
+</html>

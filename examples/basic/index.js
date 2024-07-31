@@ -14,6 +14,7 @@ console.log(scope.scopes);
 console.log(scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText);
 // outputs: a/2 b/2
 
+// @ts-ignore
 console.log(scope.scopes["my-scope-2"].root.getAttribute("id"));
 // outputs: my-block
 
