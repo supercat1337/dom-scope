@@ -280,12 +280,10 @@ export class DomScope {
     querySelector(query) {
         if (this.#root_element === null) throw new Error("Object is already destroyed");
 
-        let result = this.#root_element.querySelector(query);
-        if (!result) return null;
-
-        if (!this.contains(result, true)) return null;
-
-        return result;
+        let result = this.querySelectorAll(query);
+        if (result.length == 0) return null;
+        
+        return result[0];
     }
 
     /**
