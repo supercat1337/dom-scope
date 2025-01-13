@@ -13,33 +13,33 @@ To do this, as a rule, developers use identifiers in the attributes of the neces
 To solve this problem, this library was invented.
 
 
-## data-scope and data-ref attributes
+## scope and ref attributes
 
-To create a scope, you need to create a special data-scope attribute on the parent element. 
+To create a scope, you need to create a special scope attribute on the parent element. 
 
-You can assign local identifiers to child elements using the data-ref attribute.
+You can assign local identifiers to child elements using the ref attribute.
 
 ### basic example
 
 ```html
 <body>
-    <span data-ref="a">a</span>
-    <span data-ref="b">b</span>
-    <div data-scope="my-scope-1">
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
+    <div scope="my-scope-1">
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
-    <div data-scope="my-scope-2" id="my-block">    
-        <span data-ref="a">a/2</span>
-        <span data-ref="b">b/2</span>
+    <div scope="my-scope-2" id="my-block">    
+        <span ref="a">a/2</span>
+        <span ref="b">b/2</span>
         <span id="foo">foo</span>
-        <div data-scope="my-scope">    
-            <span data-ref="a">a/2/1</span>
-            <span data-ref="b">b/2/1</span>
+        <div scope="my-scope">    
+            <span ref="a">a/2/1</span>
+            <span ref="b">b/2/1</span>
         </div>
-        <div data-scope="my-scope-2">    
-            <span data-ref="a">a/2/2</span>
-            <span data-ref="b">b/2/2</span>
+        <div scope="my-scope-2">    
+            <span ref="a">a/2/2</span>
+            <span ref="b">b/2/2</span>
         </div>
     </div>
     <script src="index.js" type="module"></script>
@@ -87,7 +87,7 @@ function outputElementInfo(element) {
 
 let scope = new DomScope(document.body);
 
-let refs_array = scope.querySelectorAll("[data-ref],[data-scope]");
+let refs_array = scope.querySelectorAll("[ref],[scope]");
 
 refs_array.forEach((element)=>{
     console.log(outputElementInfo(element));
@@ -95,10 +95,10 @@ refs_array.forEach((element)=>{
 
 /*
 outputs:
-SPAN data-ref=a
-SPAN data-ref=b
-DIV data-scope=my-scope-1
-DIV data-scope=my-scope-2 id=my-block
+SPAN ref=a
+SPAN ref=b
+DIV scope=my-scope-1
+DIV scope=my-scope-2 id=my-block
 */
 ```
 
@@ -155,10 +155,10 @@ scope.walk((element)=>{
 });
 /*
 outputs:
-SPAN data-ref=a
-SPAN data-ref=b
-DIV data-scope=my-scope-1
-DIV data-scope=my-scope-2 id=my-block
+SPAN ref=a
+SPAN ref=b
+DIV scope=my-scope-1
+DIV scope=my-scope-2 id=my-block
 SCRIPT src=index.js type=module
 */
 
@@ -170,11 +170,11 @@ another_scope.walk((element)=>{
 });
 /*
 outputs:
-SPAN data-ref=a
-SPAN data-ref=b
+SPAN ref=a
+SPAN ref=b
 SPAN id=foo
-DIV data-scope=my-scope
-DIV data-scope=my-scope-2
+DIV scope=my-scope
+DIV scope=my-scope-2
 */
 ```
 
@@ -182,16 +182,16 @@ DIV data-scope=my-scope-2
 
 ```html
 <body>
-    <span data-ref="a">a</span>
-    <span data-ref="b">b</span>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
 
     <div custom-scope-attribute="custom_scope_name">
-        <span data-ref="a">a in custom_scope_name</span>
+        <span ref="a">a in custom_scope_name</span>
         <slot>
-            <span data-ref="a">slot</span>
+            <span ref="a">slot</span>
         </slot>
         <slot name="slot2">
-            <span data-ref="a">a slot2</span>
+            <span ref="a">a slot2</span>
         </slot>
     </div>
 

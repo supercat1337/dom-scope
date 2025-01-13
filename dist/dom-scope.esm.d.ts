@@ -11,9 +11,12 @@ export type TypeAllDomScopeOptions = {
     is_scope_element?: TypeIsScopeElement;
     default_scope_name?: string | (() => string);
 };
-export type TypeDomScope = DomScope;
-/** @typedef {DomScope} TypeDomScope */
-export class DomScope {
+/**
+ * @template {{[key:string]:HTMLElement}} T
+ */
+export class DomScope<T extends {
+    [key: string]: HTMLElement;
+}> {
     /**
      *
      * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
@@ -27,20 +30,18 @@ export class DomScope {
      *
      * @type {HTMLElement|DocumentFragment|ShadowRoot}
      */
-    get root(): HTMLElement | ShadowRoot | DocumentFragment;
+    get root(): HTMLElement | DocumentFragment | ShadowRoot;
     /**
-     * get the object contains html elements with data-ref attribute
-     * @type {{[key:string]:HTMLElement}}
+     * get the object contains html elements with ref attribute
+     * @type {T}
      * */
-    get refs(): {
-        [key: string]: HTMLElement;
-    };
+    get refs(): T;
     /**
      * get the object contains children DomScopes
      * @type {{[key:string]:DomScope}}
      * */
     get scopes(): {
-        [key: string]: DomScope;
+        [key: string]: DomScope<any>;
     };
     /**
      * Updates refs and scopes objects
@@ -84,7 +85,7 @@ export class DomScope {
     #private;
 }
 /**
- * Returns an object of child elements containing the data-ref attribute
+ * Returns an object of child elements containing the ref attribute
  * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {TypeDomScopeOptions} [options]
  */
