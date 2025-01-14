@@ -17,27 +17,27 @@ const document = window.document;
 const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
 body.innerHTML = /* html*/`
-<span data-ref="a">a</span>
-<span data-ref="b">b</span>
+<span ref="a">a</span>
+<span ref="b">b</span>
 
-<div data-scope="my-scope-1">
-    <span data-ref="a">a/1</span>
-    <span data-ref="b">b/1</span>
+<div scope-ref="my-scope-1">
+    <span ref="a">a/1</span>
+    <span ref="b">b/1</span>
 </div>
 
-<div data-scope="my-scope-2" id="my-block">    
-    <span data-ref="a">a/2</span>
-    <span data-ref="b">b/2</span>
+<div scope-ref="my-scope-2" id="my-block">    
+    <span ref="a">a/2</span>
+    <span ref="b">b/2</span>
     <span id="foo">foo</span>
 
-    <div data-scope="my-scope">    
-        <span data-ref="a">a/2/1</span>
-        <span data-ref="b">b/2/1</span>
+    <div scope-ref="my-scope">    
+        <span ref="a">a/2/1</span>
+        <span ref="b">b/2/1</span>
     </div>
 
-    <div data-scope="my-scope-2">    
-        <span data-ref="a">a/2/2</span>
-        <span data-ref="b">b/2/2</span>
+    <div scope-ref="my-scope-2">    
+        <span ref="a">a/2/2</span>
+        <span ref="b">b/2/2</span>
     </div>
 
 </div>
@@ -50,7 +50,7 @@ test("selectRefs", t => {
 
     let entries = Object.entries(refs);
 
-    if (entries.length == 2 && entries[0][1].getAttribute("data-ref") == "a" && entries[1][1].getAttribute("data-ref") == "b") {
+    if (entries.length == 2 && entries[0][1].getAttribute("ref") == "a" && entries[1][1].getAttribute("ref") == "b") {
         t.pass();
     }
     else {
@@ -69,12 +69,7 @@ test("walkDomScope", t => {
 
     walkDomScope(body, callback, { document: document });
 
-    if (foo == 4) {
-        t.pass();
-    }
-    else {
-        t.fail();
-    }
+    t.is(foo, 4);
 
 });
 
@@ -107,42 +102,30 @@ test("DomScope (root, contains, refs)", t => {
 
     let output_1 = scope.refs.a.innerText + " " + scope.refs.b.innerText;
 
-    if (output_1 != "a b") t.fail(output_1);
-    // outputs: a b
+    t.is(output_1, "a b");
+
     let output_2 = Object.entries(scope.scopes).map(item => item[0]).join(",");
     if (output_2 != "my-scope-1,my-scope-2") t.fail(output_1);
 
     // @ts-ignore
     let output_3 = (scope.scopes["my-scope-2"].root.getAttribute("id"));
-    if (output_3 != "my-block") t.fail(output_3 + "");
-    // outputs: my-block
+    t.is(output_3, "my-block");
+
 
     let output_4 = [scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText].join(" ")
-    if (output_4 != "a/2 b/2") t.fail(output_4 + "");
-    // outputs: a/2 b/2
+    t.is(output_4, "a/2 b/2");
 
     const block_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("my-block")));
     let another_scope = new DomScope(block_element);
     another_scope.options.document = document;
 
     let output_5 = [another_scope.refs.a.innerText, another_scope.refs.b.innerText].join(" ")
-    if (output_5 != "a/2 b/2") t.fail(output_5 + "");
-    // outputs: a/2 b/2
+    t.is(output_5, "a/2 b/2");
 
     const foo_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("foo")));
-    let output_6 = (scope.root.contains(foo_element)).toString();
-    if (output_6 != "true") t.fail(output_6);
-    // outputs: true. document.body constains foo_element
-
-    let output_7 = (scope.contains(foo_element)).toString();
-    if (output_7 != "false") t.fail(output_7);
-    // outputs: false. foo_element is out of #scope
-
-    let output_8 = (another_scope.contains(foo_element)).toString();
-    if (output_8 != "true") t.fail(output_8);
-    // outputs: true. foo_element is inside of #another_scope
-
-    t.pass();
+    t.true(scope.root.contains(foo_element));
+    t.false(scope.contains(foo_element));
+    t.true(another_scope.contains(foo_element));
 });
 
 test("DomScope (scopes)", t => {
@@ -213,7 +196,10 @@ test("DomScope (destroy)", t => {
     let output_1 = (scope.querySelectorAll("#my-block").length).toString();
     if (output_1 != "1") t.fail(output_1);
 
+    t.false(scope.isDestroyed);
     scope.destroy();
+    t.true(scope.isDestroyed);
+
     try {
         let output_2 = (scope.querySelectorAll("#my-block").length).toString();
         t.fail();
@@ -222,14 +208,14 @@ test("DomScope (destroy)", t => {
     }
 });
 
-test("DomScope (dublicate data-ref and scopes)", t => {
+test("DomScope (dublicate ref and scopes)", t => {
 
     let scope = new DomScope(body);
     scope.options.document = document;
 
     body.insertAdjacentHTML("beforeend", /* html */`
-        <span data-ref="a" dublicated></span>
-        <div data-scope="my-scope-1" dublicated>
+        <span ref="a" dublicated></span>
+        <div scope-ref="my-scope-1" dublicated>
         </div>
     `);
 
@@ -257,16 +243,16 @@ test("DomScope (custom scopes)", t => {
     const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
     body.innerHTML = /* html*/`
-    <span data-ref="a">a</span>
-    <span data-ref="b">b</span>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
 
     <div custom-scope-attribute="custom_scope_name">
-        <span data-ref="a">a in custom_scope_name</span>
+        <span ref="a">a in custom_scope_name</span>
         <slot>
-            <span data-ref="a">slot</span>
+            <span ref="a">slot</span>
         </slot>
         <slot name="slot2">
-            <span data-ref="a">a slot2</span>
+            <span ref="a">a slot2</span>
         </slot>
     </div>
     `;
@@ -308,12 +294,12 @@ test("DomScope (isScopeElement)", t => {
     const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
     body.innerHTML = /* html*/`
-    <span data-ref="a">a</span>
-    <span data-ref="b">b</span>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
     
-    <div data-scope="my-scope-1">
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <div scope-ref="my-scope-1">
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
     `;
 
@@ -321,7 +307,7 @@ test("DomScope (isScopeElement)", t => {
     scope.options.document = document;
 
     let is_scope_1 = scope.isScopeElement(body);
-    let scope_element = /** @type {HTMLElement} */ (body.querySelector(`[data-scope="my-scope-1"]`));
+    let scope_element = /** @type {HTMLElement} */ (body.querySelector(`[scope-ref="my-scope-1"]`));
     let is_scope_2 = scope.isScopeElement(scope_element);
 
 
@@ -330,7 +316,7 @@ test("DomScope (isScopeElement)", t => {
     }
 
     if (is_scope_2!==true) {
-        t.fail(`[data-scope="my-scope-1"] is scope`);
+        t.fail(`[scope-ref="my-scope-1"] is scope`);
     }
     
     t.pass();
@@ -344,27 +330,27 @@ test("DomScope (unnamed scopes)", t => {
     const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
     body.innerHTML = /* html*/`
-    <span data-ref="a">a</span>
-    <span data-ref="b">b</span>
+    <span ref="a">a</span>
+    <span ref="b">b</span>
     
-    <div data-scope="my-scope-1">
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <div scope-ref="my-scope-1">
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
 
-    <div data-scope="my-scope-1">
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <div scope-ref="my-scope-1">
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
 
-    <div data-scope>
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <div scope-ref>
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
 
-    <div data-scope>
-        <span data-ref="a">a/1</span>
-        <span data-ref="b">b/1</span>
+    <div scope-ref>
+        <span ref="a">a/1</span>
+        <span ref="b">b/1</span>
     </div>
 
     `;

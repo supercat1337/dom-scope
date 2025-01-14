@@ -82,6 +82,11 @@ export class DomScope<T extends {
      * @returns {boolean}
      */
     isScopeElement(element: HTMLElement): boolean;
+    /**
+     * Checks if the instance was destroyed
+     * @returns {boolean} true if the instance was destroyed
+     */
+    get isDestroyed(): boolean;
     #private;
 }
 /**

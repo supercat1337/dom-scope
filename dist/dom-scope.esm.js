@@ -2,7 +2,7 @@
 
 /** @module DomScope */
 
-const SCOPE_ATTR_NAME = "scope";
+const SCOPE_ATTR_NAME = "scope-ref";
 const SCOPE_AUTO_NAME_PREFIX = "$";
 const REF_ATTR_NAME = "ref";
 
@@ -194,7 +194,7 @@ function walkDomScope(root_element, callback, options) {
  */
 class DomScope {
 
-    #isDestroyed = false;
+    #is_destroyed = false;
 
     /** @type {HTMLElement|DocumentFragment|ShadowRoot} */
     #root_element
@@ -261,7 +261,7 @@ class DomScope {
      * @param {(currentElement:HTMLElement)=>void} [callback]
     */
     update(callback) {
-        if (this.#isDestroyed) throw new Error("Object is already destroyed");
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.options);
         
@@ -285,7 +285,7 @@ class DomScope {
      * @returns {null|Element}
      */
     querySelector(query) {
-        if (this.#isDestroyed) throw new Error("Object is already destroyed");
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         let result = this.querySelectorAll(query);
         if (result.length == 0) return null;
@@ -299,7 +299,7 @@ class DomScope {
      * @returns {HTMLElement[]}
      */
     querySelectorAll(query) {
-        if (this.#isDestroyed) throw new Error("Object is already destroyed");
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         var found_results = this.#root_element.querySelectorAll(query);
         if (found_results.length == 0) return [];
@@ -321,7 +321,7 @@ class DomScope {
      * @returns {Boolean}
      */
     contains(element, check_only_child_scopes = false) {
-        if (this.#isDestroyed) throw new Error("Object is already destroyed");
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         if (check_only_child_scopes === false) {
             if (!this.#root_element.contains(element)) return false;
@@ -343,7 +343,7 @@ class DomScope {
      * @param {(currentElement:HTMLElement)=>void} callback 
      */
     walk(callback) {
-        if (this.#isDestroyed) throw new Error("Object is already destroyed");
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         walkDomScope(this.#root_element, callback, this.options);
     }
@@ -352,7 +352,7 @@ class DomScope {
      * Destroys the instance 
      */
     destroy() {
-        this.#isDestroyed = true;
+        this.#is_destroyed = true;
 
         // @ts-ignore
         this.#root_element = null;
@@ -374,6 +374,14 @@ class DomScope {
     isScopeElement(element) {
         let options = getOptions(this.options);
         return !!isScopeElement(element, options);
+    }
+
+    /**
+     * Checks if the instance was destroyed
+     * @returns {boolean} true if the instance was destroyed
+     */
+    get isDestroyed() {
+        return this.#is_destroyed;
     }
 }
 

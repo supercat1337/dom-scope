@@ -13,7 +13,7 @@ function outputElementInfo(element) {
 
 let scope = new DomScope(document.body);
 
-let refs_array = scope.querySelectorAll("[data-ref],[data-scope]");
+let refs_array = scope.querySelectorAll("[ref],[scope]");
 
 refs_array.forEach((element)=>{
     console.log(outputElementInfo(element));
@@ -21,8 +21,8 @@ refs_array.forEach((element)=>{
 
 /*
 outputs:
-SPAN data-ref=a
-SPAN data-ref=b
-DIV data-scope=my-scope-1
-DIV data-scope=my-scope-2 id=my-block
+SPAN ref=a
+SPAN ref=b
+DIV scope-ref=my-scope-1
+DIV scope-ref=my-scope-2 id=my-block
 */

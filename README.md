@@ -13,7 +13,7 @@ To do this, as a rule, developers use identifiers in the attributes of the neces
 To solve this problem, this library was invented.
 
 
-## scope and ref attributes
+## scope-ref and ref attributes
 
 To create a scope, you need to create a special scope attribute on the parent element. 
 
@@ -25,19 +25,19 @@ You can assign local identifiers to child elements using the ref attribute.
 <body>
     <span ref="a">a</span>
     <span ref="b">b</span>
-    <div scope="my-scope-1">
+    <div scope-ref="my-scope-1">
         <span ref="a">a/1</span>
         <span ref="b">b/1</span>
     </div>
-    <div scope="my-scope-2" id="my-block">    
+    <div scope-ref="my-scope-2" id="my-block">    
         <span ref="a">a/2</span>
         <span ref="b">b/2</span>
         <span id="foo">foo</span>
-        <div scope="my-scope">    
+        <div scope-ref="my-scope">    
             <span ref="a">a/2/1</span>
             <span ref="b">b/2/1</span>
         </div>
-        <div scope="my-scope-2">    
+        <div scope-ref="my-scope-2">    
             <span ref="a">a/2/2</span>
             <span ref="b">b/2/2</span>
         </div>
@@ -97,8 +97,8 @@ refs_array.forEach((element)=>{
 outputs:
 SPAN ref=a
 SPAN ref=b
-DIV scope=my-scope-1
-DIV scope=my-scope-2 id=my-block
+DIV scope-ref=my-scope-1
+DIV scope-ref=my-scope-2 id=my-block
 */
 ```
 
@@ -157,8 +157,8 @@ scope.walk((element)=>{
 outputs:
 SPAN ref=a
 SPAN ref=b
-DIV scope=my-scope-1
-DIV scope=my-scope-2 id=my-block
+DIV scope-ref=my-scope-1
+DIV scope-ref=my-scope-2 id=my-block
 SCRIPT src=index.js type=module
 */
 
@@ -173,8 +173,8 @@ outputs:
 SPAN ref=a
 SPAN ref=b
 SPAN id=foo
-DIV scope=my-scope
-DIV scope=my-scope-2
+DIV scope-ref=my-scope
+DIV scope-ref=my-scope-2
 */
 ```
 
