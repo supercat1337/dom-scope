@@ -8,14 +8,14 @@ const REF_ATTR_NAME = "ref";
 
 
 /** 
- * @typedef {(element:HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
+ * @typedef {(element:Element|HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
  * @typedef {{ref_attr_name?:string, document?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeDomScopeOptions
  * @typedef {{ref_attr_name:string, document: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeAllDomScopeOptions
 */
 
 /**
  * 
- * @param {HTMLElement} element 
+ * @param {Element|HTMLElement} element 
  * @param {TypeAllDomScopeOptions} options 
  * @returns {false|string} returns scope name or false
  */
@@ -52,7 +52,7 @@ function getOptions(options) {
 
 /**
  * 
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} [custom_callback] 
  * @param {TypeDomScopeOptions} [options] 
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
@@ -127,7 +127,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
 /**
  * Returns an object of child elements containing the ref attribute
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {TypeDomScopeOptions} [options] 
  */
 export function selectRefs(root_element, options) {
@@ -154,7 +154,7 @@ export function selectRefs(root_element, options) {
 
 /**
  * 
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element 
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} callback 
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
  */
@@ -196,7 +196,7 @@ export class DomScope {
 
     #is_destroyed = false;
 
-    /** @type {HTMLElement|DocumentFragment|ShadowRoot} */
+    /** @type {Element|HTMLElement|DocumentFragment|ShadowRoot} */
     #root_element
 
     /** @type {Boolean} */
@@ -213,7 +213,7 @@ export class DomScope {
 
     /**
      * 
-     * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
+     * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
      * @param {TypeDomScopeOptions} [options={}] 
      */
     constructor(root_element, options = {}) {
@@ -226,7 +226,7 @@ export class DomScope {
     /**
      * Get root element
      *
-     * @type {HTMLElement|DocumentFragment|ShadowRoot}
+     * @type {Element|HTMLElement|DocumentFragment|ShadowRoot}
      */
     get root() {
         return this.#root_element;
@@ -258,7 +258,7 @@ export class DomScope {
 
     /**
      * Updates refs and scopes objects
-     * @param {(currentElement:HTMLElement)=>void} [callback]
+     * @param {(currentElement:Element|HTMLElement)=>void} [callback]
     */
     update(callback) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
@@ -368,7 +368,7 @@ export class DomScope {
 
     /**
      * Checks if element is scope
-     * @param {HTMLElement} element 
+     * @param {Element|HTMLElement} element 
      * @returns {boolean}
      */
     isScopeElement(element) {

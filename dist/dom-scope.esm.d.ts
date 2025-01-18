@@ -1,4 +1,4 @@
-export type TypeIsScopeElement = (element: HTMLElement, options: TypeAllDomScopeOptions) => string | null | false;
+export type TypeIsScopeElement = (element: Element | HTMLElement, options: TypeAllDomScopeOptions) => string | null | false;
 export type TypeDomScopeOptions = {
     ref_attr_name?: string;
     document?: any;
@@ -19,18 +19,18 @@ export class DomScope<T extends {
 }> {
     /**
      *
-     * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
+     * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
      * @param {TypeDomScopeOptions} [options={}]
      */
-    constructor(root_element: HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions);
+    constructor(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions);
     /** @type {TypeDomScopeOptions} */
     options: TypeDomScopeOptions;
     /**
      * Get root element
      *
-     * @type {HTMLElement|DocumentFragment|ShadowRoot}
+     * @type {Element|HTMLElement|DocumentFragment|ShadowRoot}
      */
-    get root(): HTMLElement | DocumentFragment | ShadowRoot;
+    get root(): Element | HTMLElement | DocumentFragment | ShadowRoot;
     /**
      * get the object contains html elements with ref attribute
      * @type {T}
@@ -45,9 +45,9 @@ export class DomScope<T extends {
     };
     /**
      * Updates refs and scopes objects
-     * @param {(currentElement:HTMLElement)=>void} [callback]
+     * @param {(currentElement:Element|HTMLElement)=>void} [callback]
     */
-    update(callback?: (currentElement: HTMLElement) => void): void;
+    update(callback?: (currentElement: Element | HTMLElement) => void): void;
     /**
      * Searches an element with css selector in current DomScope
      * @param {string} query
@@ -78,10 +78,10 @@ export class DomScope<T extends {
     destroy(): void;
     /**
      * Checks if element is scope
-     * @param {HTMLElement} element
+     * @param {Element|HTMLElement} element
      * @returns {boolean}
      */
-    isScopeElement(element: HTMLElement): boolean;
+    isScopeElement(element: Element | HTMLElement): boolean;
     /**
      * Checks if the instance was destroyed
      * @returns {boolean} true if the instance was destroyed
@@ -91,20 +91,20 @@ export class DomScope<T extends {
 }
 /**
  * Returns an object of child elements containing the ref attribute
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {TypeDomScopeOptions} [options]
  */
-export function selectRefs(root_element: HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions): {
+export function selectRefs(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions): {
     [key: string]: HTMLElement;
 };
 /**
  *
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} [custom_callback]
  * @param {TypeDomScopeOptions} [options]
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
-export function selectRefsExtended(root_element: HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): {
+export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): {
     refs: {
         [key: string]: HTMLElement;
     };
@@ -114,9 +114,9 @@ export function selectRefsExtended(root_element: HTMLElement | DocumentFragment 
 };
 /**
  *
- * @param {HTMLElement|DocumentFragment|ShadowRoot} root_element
+ * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} callback
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
  */
-export function walkDomScope(root_element: HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): void;
+export function walkDomScope(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): void;
 //# sourceMappingURL=dom-scope.esm.d.ts.map
