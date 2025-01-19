@@ -9,8 +9,8 @@ const REF_ATTR_NAME = "ref";
 
 /** 
  * @typedef {(element:Element|HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, document?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeDomScopeOptions
- * @typedef {{ref_attr_name:string, document: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string}} TypeAllDomScopeOptions
+ * @typedef {{ref_attr_name?:string, document?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root?: boolean}} TypeDomScopeOptions
+ * @typedef {{ref_attr_name:string, document: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root: boolean}} TypeAllDomScopeOptions
 */
 
 /**
@@ -44,7 +44,8 @@ function getOptions(options) {
         ref_attr_name: REF_ATTR_NAME,
         document: null,
         is_scope_element: undefined,
-        default_scope_name: undefined
+        default_scope_name: undefined,
+        include_root: true
     };
 
     return Object.assign({}, init_data, options);
@@ -109,6 +110,14 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
         if (custom_callback) custom_callback(currentNode);
 
+    }
+
+    if (_options.include_root === true) {
+        refs.root = /** @type {HTMLElement} */ (root_element);
+
+        if (custom_callback) {
+            custom_callback(/** @type {HTMLElement} */ (root_element));
+        }
     }
 
     walkDomScope(root_element, callback, _options);

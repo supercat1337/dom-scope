@@ -4,12 +4,14 @@ export type TypeDomScopeOptions = {
     document?: any;
     is_scope_element?: TypeIsScopeElement;
     default_scope_name?: string | (() => string);
+    include_root?: boolean;
 };
 export type TypeAllDomScopeOptions = {
     ref_attr_name: string;
     document: any;
     is_scope_element?: TypeIsScopeElement;
     default_scope_name?: string | (() => string);
+    include_root: boolean;
 };
 /**
  * @template {{[key:string]:HTMLElement}} T
