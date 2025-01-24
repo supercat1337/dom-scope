@@ -2,183 +2,99 @@
     dom-scope
 </h1>
 
-dom-scope is a tiny javascript library that allows you to work with HTML document scopes. 
+dom-scope is a tiny javascript library that allows you to create scopes inside the DOM and get references to local html-elements.
 
 ## What are scopes inside the DOM for?
 
-When you work with a large HTML document, you often need to get references to specific DOM elements. 
+When working with a large HTML document, it's often necessary to get references to specific DOM elements. 
 
-To do this, as a rule, developers use identifiers in the attributes of the necessary elements. However, there remains the possibility that the document may contain several elements with the same identifier. 
+This can be done by using identifiers in the attributes of the necessary elements. However, there is a risk that the document may contain multiple elements with the same identifier. To avoid confusion, this library was created to help developers create scopes inside the DOM. A scope is an isolated area of the DOM that contains unique identifiers for its elements. Scopes can be nested, allowing you to create a hierarchical structure of unique identifiers. This makes it easier to access specific elements in the DOM.
 
-To solve this problem, this library was invented.
+This library provides a simple way to create scopes inside the DOM and get references to the elements in the scope.
 
-
-## scope-ref and ref attributes
-
-To create a scope, you need to create a special scope attribute on the parent element. 
-
-You can assign local identifiers to child elements using the ref attribute.
-
-### basic example
+### Example
 
 ```html
 <body>
     <span ref="a">a</span>
     <span ref="b">b</span>
+
     <div scope-ref="my-scope-1">
-        <span ref="a">a/1</span>
-        <span ref="b">b/1</span>
+        <div ref="a">a</div>
+        <div ref="b">b</div>       
+        <div ref="c">c</div>
     </div>
-    <div scope-ref="my-scope-2" id="my-block">    
-        <span ref="a">a/2</span>
-        <span ref="b">b/2</span>
-        <span id="foo">foo</span>
-        <div scope-ref="my-scope">    
-            <span ref="a">a/2/1</span>
-            <span ref="b">b/2/1</span>
-        </div>
-        <div scope-ref="my-scope-2">    
-            <span ref="a">a/2/2</span>
-            <span ref="b">b/2/2</span>
-        </div>
-    </div>
-    <script src="index.js" type="module"></script>
 </body>
 ```
 
-#### scope.refs
-
 ```js
-// @ts-check
 import { DomScope } from "dom-scope";
 
-/**
- * @param {DomScope} scope 
- */
-function showRefsText(scope) {
-    let { a, b } = scope.refs;
-    console.log(a.innerText, b.innerText);
-}
+const domScope = new DomScope(document.body);
+const refs = domScope.refs;
+console.log(refs.a instanceof HTMLSpanElement); // true
+console.log(refs.b instanceof HTMLSpanElement); // true
 
-let scope = new DomScope(document.body);
-showRefsText(scope);
-// outputs: a b
-
-let my_block = /** @type {HTMLElement} */ (document.querySelector("#my-block"));
-let scope_2 = new DomScope(my_block);
-showRefsText(scope_2);
-// outputs: a/2 b/2
+let scope = domScope.scopes["my-scope-1"];
+const {a, b, c} = scope.refs;
+console.log(a instanceof HTMLDivElement); // true
+console.log(b instanceof HTMLDivElement); // true
+console.log(c instanceof HTMLDivElement); // true
 ```
 
-
-#### scope.querySelectorAll
+dom-scope also provides full type support, so you can get autocompletion and type checking for your refs when using TypeScript. Additionally, you can check the refs at runtime using the "checkRefs" method.
 
 ```js
-// @ts-check
 import { DomScope } from "dom-scope";
 
-/**
- * @param {HTMLElement} element 
- */
-function outputElementInfo(element) {
-    let attrs = element.getAttributeNames().map(attr_name=>attr_name + "=" + element.getAttribute(attr_name)).join(" ");
-    return `${element.tagName} ${attrs}`
-}
+/** @type {DomScope<{a: HTMLSpanElement, b: HTMLSpanElement}>} */
+const domScope = new DomScope(document.body);
+// now refs are typed
 
-let scope = new DomScope(document.body);
+const refs = domScope.refs;
 
-let refs_array = scope.querySelectorAll("[ref],[scope]");
-
-refs_array.forEach((element)=>{
-    console.log(outputElementInfo(element));
+// throws error if the required refs are not correct
+domScope.checkRefs({
+    a: HTMLSpanElement,
+    b: HTMLSpanElement
 });
 
-/*
-outputs:
-SPAN ref=a
-SPAN ref=b
-DIV scope-ref=my-scope-1
-DIV scope-ref=my-scope-2 id=my-block
-*/
+// another way to get typed scope is to use annotation object and then call checkRefs on it
+const annotation = {
+    a: HTMLDivElement.prototype,
+    b: HTMLDivElement.prototype,
+    c: HTMLDivElement.prototype
+};
+
+let scope = /** @type {DomScope<typeof annotation>} */ (domScope.scopes["my-scope-1"]);
+// now refs are typed
+const { a, b, c} = scope.refs;
+
+// throws error if the required refs are not correct
+scope.checkRefs(annotation);
 ```
 
-#### Working with scopes
+## How does it work?
 
-```js
-// @ts-check
-import { DomScope } from "dom-scope";
+dom-scope works by traversing the DOM tree and creating a dictionary of all elements that have a `ref` or `scope-ref` attribute. The dictionary is then used to create a scope object that can be used to access the elements in the scope.
 
-let scope = new DomScope(document.body);
-console.log(scope.root == document.body);
-// outputs: true
+The scope object has a `refs` property that contains all the elements in the scope. The `refs` property is an object with the same keys as the `ref` attribute values. The values of the `refs` property are the elements themselves.
 
-console.log(scope.refs.a.innerText, scope.refs.b.innerText);
-// outputs: a b
-console.log(scope.scopes);
-// outputs: {"my-scope-1": DomScope, "my-scope-2": DomScope}
-console.log(scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText);
-// outputs: a/2 b/2
+The scope object also has a `scopes` property that contains all the scopes that are nested inside the current scope. The `scopes` property is an object with the same keys as the `scope-ref` attribute values. The values of the `scopes` property are scope objects that can be used to access the elements in the nested scopes.
 
-console.log(scope.scopes["my-scope-2"].root.getAttribute("id"));
-// outputs: my-block
+The scope object also has a `querySelectorAll` method that can be used to select elements in the scope. The `querySelectorAll` method takes a CSS selector as an argument and returns an array of elements that match the selector.
 
-const block_element = /** @type {HTMLElement} */ (document.getElementById("my-block"));
-let another_scope = new DomScope(block_element);
-console.log(another_scope.refs.a.innerText, another_scope.refs.b.innerText);
-// outputs: a/2 b/2
+The scope object also has a `walk` method that can be used to traverse the DOM tree and execute a callback function for each element in the scope. The `walk` method takes a callback function as an argument and executes it for each element in the scope.
 
-const foo_element = /** @type {HTMLElement} */ (document.getElementById("foo"));
-console.log(scope.root.contains(foo_element));
-// outputs: true. document.body constains foo_element
-console.log(scope.contains(foo_element));
-// outputs: false. foo_element is out of #scope
-console.log(another_scope.contains(foo_element));
-// outputs: true. foo_element is inside of #another_scope
-```
+## Custom scopes
 
-Also you can walk through all elements in the scope 
-```js
-// @ts-check
-import { DomScope } from "dom-scope";
+dom-scope also supports custom scopes. Custom scopes are scopes that are created using a custom attribute instead of the `scope-ref` attribute. Custom scopes can be used to create scopes that are not based on the `scope-ref` attribute.
 
-/**
- * @param {HTMLElement} element 
- */
-function outputElementInfo(element) {
-    let attrs = element.getAttributeNames().map(attr_name=>attr_name + "=" + element.getAttribute(attr_name)).join(" ");
-    return `${element.tagName} ${attrs}`
-}
+To create a custom scope, you need to pass a function that determines whether an element is a scope element or not. The function should take an element as an argument and return a boolean value indicating whether the element is a scope element or not.
 
-let scope = new DomScope(document.body);
-scope.walk((element)=>{
-    console.log(outputElementInfo(element));
-});
-/*
-outputs:
-SPAN ref=a
-SPAN ref=b
-DIV scope-ref=my-scope-1
-DIV scope-ref=my-scope-2 id=my-block
-SCRIPT src=index.js type=module
-*/
+The function can also be used to determine the name of the scope. The name of the scope is used as the key in the `scopes` object.
 
-const block_element = /** @type {HTMLElement} */ (document.getElementById("my-block"));
-let another_scope = new DomScope(block_element);
-console.log("----------------");
-another_scope.walk((element)=>{
-    console.log(outputElementInfo(element));
-});
-/*
-outputs:
-SPAN ref=a
-SPAN ref=b
-SPAN id=foo
-DIV scope-ref=my-scope
-DIV scope-ref=my-scope-2
-*/
-```
-
-#### Custom scopes
+For example, to create a custom scope that is based on a `custom-scope-attribute` attribute, you can pass a function like this:
 
 ```html
 <body>
@@ -186,50 +102,36 @@ DIV scope-ref=my-scope-2
     <span ref="b">b</span>
 
     <div custom-scope-attribute="custom_scope_name">
-        <span ref="a">a in custom_scope_name</span>
-        <slot>
-            <span ref="a">slot</span>
-        </slot>
-        <slot name="slot2">
-            <span ref="a">a slot2</span>
-        </slot>
+        <span ref="c">c</span>
     </div>
-
-    <script src="index.js" type="module"></script>
 </body>
 ```
 
 ```js
-// @ts-check
 import { DomScope } from "dom-scope";
 
-let scope = new DomScope(document.body);
+const domScope = new DomScope(document.body);
 
-scope.options.is_scope_element = function (element) {
-    if (element.tagName == "SLOT") {
-        return element.getAttribute("name") || "";
-    }
-
+domScope.options.is_scope_element = function (element) {
     if (element.hasAttribute("custom-scope-attribute")) {
-        return element.getAttribute("custom-scope-attribute") || "";
+        return element.getAttribute("custom-scope-attribute");
     }
 
     return false;
 }
 
-if (!scope.scopes["custom_scope_name"]) {
-    console.error("custom_scope_name not found");
-}
+const {a, b} = domScope.refs;
 
-let scopes = scope.scopes;
-
-let scope_1 = scopes["custom_scope_name"];
-
-if (!scope_1.scopes["default"]) {
-    console.error("custom_scope_name.default not found");
-}
-
-if (!scope_1.scopes["slot2"]) {
-    console.error("custom_scope_name.slot2 not found");
-}
+let scope = domScope.scopes["custom_scope_name"];
+const {c} = scope.refs;
 ```
+
+## Installation
+
+```bash
+npm install dom-scope
+```
+
+## License
+
+MIT
