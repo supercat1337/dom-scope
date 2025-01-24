@@ -14,7 +14,18 @@ const REF_ATTR_NAME = "ref";
 */
 
 /**
- * 
+ * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
+ */
+
+/**
+ * @typedef {Object} HTMLElementInterface
+ * @prop {string} name
+ * @prop {HTMLElement} prototype
+ */
+
+
+/**
+ * Checks if the element is a scope
  * @param {Element|HTMLElement} element 
  * @param {TypeAllDomScopeOptions} options 
  * @returns {false|string} returns scope name or false
@@ -34,7 +45,7 @@ function isScopeElement(element, options) {
 }
 
 /**
- * 
+ * Creates options
  * @param {TypeDomScopeOptions} [options] 
  * @returns {TypeAllDomScopeOptions}
  */
@@ -51,14 +62,14 @@ function getOptions(options) {
     let _options = Object.assign({}, init_data, options);
 
     if (!_options.window) {
-        throw new Error("options.window is not defined");    
+        throw new Error("options.window is not defined");
     }
 
     return _options;
 }
 
 /**
- * 
+ * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} [custom_callback] 
  * @param {TypeDomScopeOptions} [options] 
@@ -170,7 +181,7 @@ export function selectRefs(root_element, options) {
 }
 
 /**
- * 
+ * Walks the DOM tree of the scope and calls the callback for each element
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} callback 
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
@@ -205,10 +216,8 @@ export function walkDomScope(root_element, callback, options) {
 
 }
 
-
 /**
  * @template {{[key:string]:HTMLElement}} T
- * @template {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
  */
 export class DomScope {
 
@@ -226,24 +235,24 @@ export class DomScope {
     /** @type {{[key:string]:DomScope}} */
     #scopes
 
-    /** @type {TypeDomScopeOptions} */
-    options = {}
+    /** @type {TypeAllDomScopeOptions} */
+    options 
+
 
     /**
-     * 
+     * Creates an instance of DomScope.
      * @param {RootType} root_element the root element
-     * @param {TypeDomScopeOptions} [options={}] 
+     * @param {TypeDomScopeOptions} [options] 
      */
-    constructor(root_element, options = {}) {
+    constructor(root_element, options) {
         if (root_element == null) throw new Error("root_element is null");
 
         this.#root_element = root_element;
-        this.options = options;
+        this.options = getOptions(options);
     }
 
     /**
-     * Get root element
-     *
+     * Returns the root element
      * @type {RootType}
      */
     get root() {
@@ -251,7 +260,7 @@ export class DomScope {
     }
 
     /** 
-     * get the object contains html elements with ref attribute  
+     * Returns the object containing html elements with ref attribute
      * @type {T} 
      * */
     get refs() {
@@ -263,7 +272,7 @@ export class DomScope {
     }
 
     /**
-     * get the object contains children DomScopes 
+     * Returns the object containing children DomScopes
      * @type {{[key:string]:DomScope}} 
      * */
     get scopes() {
@@ -289,8 +298,7 @@ export class DomScope {
         let dom_scopes = {};
 
         for (let scope_name in scope_refs) {
-            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name]);
-            dom_scopes[scope_name].options = this.options;
+            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name], this.options);
         }
 
         this.#scopes = dom_scopes;
@@ -381,6 +389,8 @@ export class DomScope {
         this.#refs = {};
 
         this.#scopes = {};
+
+        // @ts-expect-error
         this.options = {};
     }
 
@@ -390,8 +400,7 @@ export class DomScope {
      * @returns {boolean}
      */
     isScopeElement(element) {
-        let options = getOptions(this.options);
-        return !!isScopeElement(element, options);
+        return !!isScopeElement(element, this.options);
     }
 
     /**
@@ -402,5 +411,45 @@ export class DomScope {
         return this.#is_destroyed;
     }
 
+
+    /**
+     * Checks if all references in the scope are correct. If not, throws an error
+     * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation Object with property names as keys and function constructors as values
+     * @example
+     * const scope = new DomScope(my_element);
+     * scope.check({
+     *     my_button: HTMLButtonElement,
+     *     my_input: HTMLInputElement
+     * });
+     */
+    checkRefs(annotation) {
+        if (this.#is_destroyed) throw new Error("Object is already destroyed");
+
+        let refs = this.refs;
+
+        for (let prop in annotation) {
+            let type = annotation[prop];
+            let ref = refs[prop];
+
+            if (!ref) {
+                throw new Error(`Missing ref: ${prop}`);
+            }
+
+            if (type instanceof this.options.window.HTMLElement) {
+                if (type.isPrototypeOf(ref) === false) {
+                    throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
+                }   
+            }
+            else {
+                // @ts-ignore
+                if (type.prototype.isPrototypeOf(ref) === false) {
+                    // @ts-ignore
+                    throw new Error(`The ref "${prop}" must be an instance of ${type.name} (actual: ${ref.constructor.name})`);
+                }   
+
+            }
+        }
+
+    }
 }
 

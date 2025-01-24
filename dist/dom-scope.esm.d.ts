@@ -1,17 +1,22 @@
 export type TypeIsScopeElement = (element: Element | HTMLElement, options: TypeAllDomScopeOptions) => string | null | false;
 export type TypeDomScopeOptions = {
     ref_attr_name?: string;
-    document?: any;
+    window?: any;
     is_scope_element?: TypeIsScopeElement;
     default_scope_name?: string | (() => string);
     include_root?: boolean;
 };
 export type TypeAllDomScopeOptions = {
     ref_attr_name: string;
-    document: any;
+    window: any;
     is_scope_element?: TypeIsScopeElement;
     default_scope_name?: string | (() => string);
     include_root: boolean;
+};
+export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
+export type HTMLElementInterface = {
+    name: string;
+    prototype: HTMLElement;
 };
 /**
  * @template {{[key:string]:HTMLElement}} T
@@ -20,26 +25,25 @@ export class DomScope<T extends {
     [key: string]: HTMLElement;
 }> {
     /**
-     *
-     * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
-     * @param {TypeDomScopeOptions} [options={}]
+     * Creates an instance of DomScope.
+     * @param {RootType} root_element the root element
+     * @param {TypeDomScopeOptions} [options]
      */
-    constructor(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions);
-    /** @type {TypeDomScopeOptions} */
-    options: TypeDomScopeOptions;
+    constructor(root_element: RootType, options?: TypeDomScopeOptions);
+    /** @type {TypeAllDomScopeOptions} */
+    options: TypeAllDomScopeOptions;
     /**
-     * Get root element
-     *
-     * @type {Element|HTMLElement|DocumentFragment|ShadowRoot}
+     * Returns the root element
+     * @type {RootType}
      */
-    get root(): Element | HTMLElement | DocumentFragment | ShadowRoot;
+    get root(): RootType;
     /**
-     * get the object contains html elements with ref attribute
+     * Returns the object containing html elements with ref attribute
      * @type {T}
      * */
     get refs(): T;
     /**
-     * get the object contains children DomScopes
+     * Returns the object containing children DomScopes
      * @type {{[key:string]:DomScope}}
      * */
     get scopes(): {
@@ -89,6 +93,19 @@ export class DomScope<T extends {
      * @returns {boolean} true if the instance was destroyed
      */
     get isDestroyed(): boolean;
+    /**
+     * Checks if all references in the scope are correct. If not, throws an error
+     * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation Object with property names as keys and function constructors as values
+     * @example
+     * const scope = new DomScope(my_element);
+     * scope.check({
+     *     my_button: HTMLButtonElement,
+     *     my_input: HTMLInputElement
+     * });
+     */
+    checkRefs(annotation: {
+        [key: string]: HTMLElementInterface | HTMLElement;
+    }): void;
     #private;
 }
 /**
@@ -100,7 +117,7 @@ export function selectRefs(root_element: Element | HTMLElement | DocumentFragmen
     [key: string]: HTMLElement;
 };
 /**
- *
+ * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} [custom_callback]
  * @param {TypeDomScopeOptions} [options]
@@ -115,7 +132,7 @@ export function selectRefsExtended(root_element: Element | HTMLElement | Documen
     };
 };
 /**
- *
+ * Walks the DOM tree of the scope and calls the callback for each element
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} callback
  * @param {TypeDomScopeOptions} [options] the attribute name contains a name of a scope
