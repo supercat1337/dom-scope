@@ -113,10 +113,12 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
     }
 
     if (_options.include_root === true) {
-        refs.root = /** @type {HTMLElement} */ (root_element);
+        if (root_element instanceof HTMLElement) {
+            refs.root = /** @type {HTMLElement} */ (root_element);
 
-        if (custom_callback) {
-            custom_callback(/** @type {HTMLElement} */ (root_element));
+            if (custom_callback) {
+                custom_callback(/** @type {HTMLElement} */(root_element));
+            }
         }
     }
 
@@ -200,12 +202,13 @@ export function walkDomScope(root_element, callback, options) {
 
 /**
  * @template {{[key:string]:HTMLElement}} T
+ * @template {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
  */
 export class DomScope {
 
     #is_destroyed = false;
 
-    /** @type {Element|HTMLElement|DocumentFragment|ShadowRoot} */
+    /** @type {RootType} */
     #root_element
 
     /** @type {Boolean} */
@@ -222,7 +225,7 @@ export class DomScope {
 
     /**
      * 
-     * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element the root element
+     * @param {RootType} root_element the root element
      * @param {TypeDomScopeOptions} [options={}] 
      */
     constructor(root_element, options = {}) {
@@ -235,7 +238,7 @@ export class DomScope {
     /**
      * Get root element
      *
-     * @type {Element|HTMLElement|DocumentFragment|ShadowRoot}
+     * @type {RootType}
      */
     get root() {
         return this.#root_element;
@@ -273,7 +276,7 @@ export class DomScope {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.options);
-        
+
         this.#refs = /** @type {T} */ (refs);
 
         /** @type {{[key:string]:DomScope}} */
@@ -298,7 +301,7 @@ export class DomScope {
 
         let result = this.querySelectorAll(query);
         if (result.length == 0) return null;
-        
+
         return result[0];
     }
 
@@ -367,10 +370,10 @@ export class DomScope {
         this.#root_element = null;
 
         this.#first_time_call = false;
-        
+
         // @ts-expect-error
         this.#refs = {};
-        
+
         this.#scopes = {};
         this.options = {};
     }
@@ -392,5 +395,6 @@ export class DomScope {
     get isDestroyed() {
         return this.#is_destroyed;
     }
+
 }
 
