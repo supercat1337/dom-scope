@@ -46,7 +46,7 @@ body.innerHTML = /* html*/`
 
 test("selectRefs", t => {
 
-    let refs = selectRefs(body, { document: document });
+    let refs = selectRefs(body, { window: window });
 
     let entries = Object.entries(refs);
 
@@ -59,6 +59,14 @@ test("selectRefs", t => {
 
 });
 
+
+test("selectRefs (no window)", t => {
+
+    t.throws(() => {
+        let refs = selectRefs(body);       
+    });
+});
+
 test("walkDomScope", t => {
 
     var foo = 0;
@@ -67,7 +75,7 @@ test("walkDomScope", t => {
         t.log(outputElementInfo(element));
     }
 
-    walkDomScope(body, callback, { document: document });
+    walkDomScope(body, callback, { window: window });
 
     t.is(foo, 4);
 
@@ -81,7 +89,7 @@ test("selectRefsExtended", t => {
         t.log(outputElementInfo(element));
     }
 
-    let result = selectRefsExtended(body, callback, { document: document });
+    let result = selectRefsExtended(body, callback, { window: window });
 
     if (result.refs.a && result.refs.b && result.scope_refs["my-scope-1"] && result.scope_refs["my-scope-2"] && result.scope_refs["my-scope-2"].id == "my-block") {
         t.pass();
@@ -95,7 +103,7 @@ test("selectRefsExtended", t => {
 test("DomScope (root, contains, refs)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     if (!(scope.root == body)) t.fail();
     // outputs: true
@@ -117,7 +125,7 @@ test("DomScope (root, contains, refs)", t => {
 
     const block_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("my-block")));
     let another_scope = new DomScope(block_element);
-    another_scope.options.document = document;
+    another_scope.options.window = window;
 
     let output_5 = [another_scope.refs.a.innerText, another_scope.refs.b.innerText].join(" ")
     t.is(output_5, "a/2 b/2");
@@ -131,7 +139,7 @@ test("DomScope (root, contains, refs)", t => {
 test("DomScope (scopes)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
     let scopes = scope.scopes;
     let output_1 = Object.entries(scopes).map(item => item[0]).join(",");
     if (output_1 != "my-scope-1,my-scope-2") t.fail(output_1);
@@ -142,7 +150,7 @@ test("DomScope (scopes)", t => {
 test("DomScope (querySelector)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     let output_1 = (!!scope.querySelector("#foo")).toString();
     if (output_1 != "false") t.fail(output_1);
@@ -156,7 +164,7 @@ test("DomScope (querySelector)", t => {
 test("DomScope (querySelectorAll)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     let output_1 = (scope.querySelectorAll("#foo").length).toString();
     if (output_1 != "0") t.fail(output_1);
@@ -176,7 +184,7 @@ test("DomScope (walk)", t => {
     }
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
     scope.walk(callback);
 
     if (foo == 4) {
@@ -191,7 +199,7 @@ test("DomScope (walk)", t => {
 test("DomScope (destroy)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     let output_1 = (scope.querySelectorAll("#my-block").length).toString();
     if (output_1 != "1") t.fail(output_1);
@@ -211,7 +219,7 @@ test("DomScope (destroy)", t => {
 test("DomScope (dublicate ref and scopes)", t => {
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     body.insertAdjacentHTML("beforeend", /* html */`
         <span ref="a" dublicated></span>
@@ -258,7 +266,7 @@ test("DomScope (custom scopes)", t => {
     `;
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     scope.options.is_scope_element = function (element) {
         if (element.tagName == "SLOT") {
@@ -304,7 +312,7 @@ test("DomScope (isScopeElement)", t => {
     `;
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     let is_scope_1 = scope.isScopeElement(body);
     let scope_element = /** @type {HTMLElement} */ (body.querySelector(`[scope-ref="my-scope-1"]`));
@@ -356,7 +364,7 @@ test("DomScope (unnamed scopes)", t => {
     `;
 
     let scope = new DomScope(body);
-    scope.options.document = document;
+    scope.options.window = window;
 
     let scope_names = Object.keys(scope.scopes);
     

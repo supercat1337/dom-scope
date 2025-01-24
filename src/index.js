@@ -9,8 +9,8 @@ const REF_ATTR_NAME = "ref";
 
 /** 
  * @typedef {(element:Element|HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, document?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root?: boolean}} TypeDomScopeOptions
- * @typedef {{ref_attr_name:string, document: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root: boolean}} TypeAllDomScopeOptions
+ * @typedef {{ref_attr_name?:string, window?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root?: boolean}} TypeDomScopeOptions
+ * @typedef {{ref_attr_name:string, window: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root: boolean}} TypeAllDomScopeOptions
 */
 
 /**
@@ -42,13 +42,19 @@ function getOptions(options) {
     /** @type {TypeAllDomScopeOptions} */
     let init_data = {
         ref_attr_name: REF_ATTR_NAME,
-        document: null,
+        window: globalThis.window,
         is_scope_element: undefined,
         default_scope_name: undefined,
         include_root: true
     };
 
-    return Object.assign({}, init_data, options);
+    let _options = Object.assign({}, init_data, options);
+
+    if (!_options.window) {
+        throw new Error("options.window is not defined");    
+    }
+
+    return _options;
 }
 
 /**
@@ -113,7 +119,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
     }
 
     if (_options.include_root === true) {
-        if (root_element instanceof HTMLElement) {
+        if (root_element instanceof options.window.HTMLElement) {
             refs.root = /** @type {HTMLElement} */ (root_element);
 
             if (custom_callback) {
@@ -189,7 +195,7 @@ export function walkDomScope(root_element, callback, options) {
         return /* NodeFilter.FILTER_ACCEPT */ 1
     }
 
-    const tw = (_options.document || root_element.ownerDocument).createTreeWalker(root_element, /* NodeFilter.SHOW_ELEMENT */ 1, scope_filter);
+    const tw = _options.window.document.createTreeWalker(root_element, /* NodeFilter.SHOW_ELEMENT */ 1, scope_filter);
 
     var currentNode;
 
