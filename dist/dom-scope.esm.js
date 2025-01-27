@@ -184,7 +184,7 @@ function selectRefs(root_element, annotation, options) {
     if (annotation) {
         checkRefs(refs, annotation);
     }
-    
+
     return /** @type {T} */ (refs);
 }
 

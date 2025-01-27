@@ -93,6 +93,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {{[key:string]: import("./tools.js").HTMLElementInterface|HTMLElement}|null} [annotation] - An object specifying the expected types for each reference.
  * @param {import("./tools.js").TypeDomScopeOptions} [options] 
+ * @returns {T}
  */
 export function selectRefs(root_element, annotation, options) {
     /** @type {{[key:string]:HTMLElement}} */
