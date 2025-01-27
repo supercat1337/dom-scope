@@ -7,7 +7,7 @@ let scope = new DomScope(document.body);
 
 scope.options.is_scope_element = function (element) {
     if (element.tagName == "SLOT") {
-        return element.getAttribute("name");
+        return element.getAttribute("name") || "";
     }
 
     if (element.hasAttribute("custom-scope-attribute")) {

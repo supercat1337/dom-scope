@@ -1,7 +1,5 @@
 // @ts-check
 
-/** @module DomScope */
-
 const SCOPE_ATTR_NAME = "scope-ref";
 const SCOPE_AUTO_NAME_PREFIX = "$";
 const REF_ATTR_NAME = "ref";
@@ -14,15 +12,10 @@ const REF_ATTR_NAME = "ref";
 */
 
 /**
- * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
- */
-
-/**
  * @typedef {Object} HTMLElementInterface
  * @prop {string} name
  * @prop {HTMLElement} prototype
  */
-
 
 /**
  * Checks if the element is a scope
@@ -68,6 +61,9 @@ function getOptions(options) {
     return _options;
 }
 
+// @ts-check
+
+
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
@@ -101,7 +97,7 @@ function selectRefsExtended(root_element, custom_callback, options = {}) {
                 if (!refs[ref_name]) {
                     refs[ref_name] = currentNode;
                 } else {
-                    console.warn(`reference #${ref_name} is already used`);
+                    console.warn(`Element has reference #${ref_name} which is already used\n`, `\nelement: `, currentNode, `\nreference #${ref_name}: `, refs[ref_name], `\nscope root: `, root_element);
                 }
             }
         }
@@ -115,7 +111,7 @@ function selectRefsExtended(root_element, custom_callback, options = {}) {
                 if (!scope_refs[ref_scope_name]) {
                     scope_refs[ref_scope_name] = currentNode;
                 } else {
-                    console.warn(`scope #${ref_scope_name} is already used`);
+                    console.warn(`scope #${ref_scope_name} is already used`, currentNode);
                     unnamed_scopes.push(currentNode);
                 }
             } else {
@@ -155,8 +151,10 @@ function selectRefsExtended(root_element, custom_callback, options = {}) {
 
 /**
  * Returns an object of child elements containing the ref attribute
+ * @template {{[key:string]:HTMLElement}} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {TypeDomScopeOptions} [options] 
+ * @returns {T}
  */
 function selectRefs(root_element, options) {
     /** @type {{[key:string]:HTMLElement}} */
@@ -177,7 +175,7 @@ function selectRefs(root_element, options) {
     }
 
     walkDomScope(root_element, callback, _options);
-    return refs;
+    return /** @type {T} */ (refs);
 }
 
 /**
@@ -215,6 +213,75 @@ function walkDomScope(root_element, callback, options) {
     }
 
 }
+
+/**
+ * Validates that all references in the provided `refs` object match the types specified in the `annotation` object.
+ * Throws an error if any reference is missing or does not match the expected type.
+ * 
+ * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
+ * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation - An object specifying the expected types for each reference.
+ * 
+ * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
+ */
+function checkRefs(refs, annotation, options) {
+
+    getOptions(options);
+
+    for (let prop in annotation) {
+        let ref = refs[prop];
+
+        if (!ref) {
+            throw new Error(`Missing ref: ${prop}`);
+        }
+
+        /*
+        let _type = annotation[prop];
+        let type = typeof _type === "function"? Object.getPrototypeOf(_type): _type;
+
+        if (type.isPrototypeOf(ref) === false) {
+            throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
+        } 
+        */  
+
+        // if type is interface, return prototype
+        // @ts-ignore 
+        const type = annotation[prop].constructor.name === "Function"? annotation[prop].prototype: annotation[prop];
+        //console.log(type, annotation[prop]);
+
+        if (type.isPrototypeOf(ref) === false) {
+            
+            throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
+        }
+
+
+        /*
+
+        let type = annotation[prop];
+        if (type instanceof _options.window.HTMLElement) {
+            if (type.isPrototypeOf(ref) === false) {
+                throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
+            }   
+        }
+        else {
+            // @ts-ignore
+            if (type.prototype.isPrototypeOf(ref) === false) {
+                // @ts-ignore
+                throw new Error(`The ref "${prop}" must be an instance of ${type.name} (actual: ${ref.constructor.name})`);
+            }   
+        }
+        //*/
+    }
+
+}
+
+// @ts-check
+/** @module DomScope */
+
+
+/**
+ * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
+ */
+
 
 /**
  * @template {{[key:string]:HTMLElement}} T
@@ -417,7 +484,7 @@ class DomScope {
      * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation Object with property names as keys and function constructors as values
      * @example
      * const scope = new DomScope(my_element);
-     * scope.check({
+     * scope.checkRefs({
      *     my_button: HTMLButtonElement,
      *     my_input: HTMLInputElement
      * });
@@ -426,31 +493,8 @@ class DomScope {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
         let refs = this.refs;
-
-        for (let prop in annotation) {
-            let type = annotation[prop];
-            let ref = refs[prop];
-
-            if (!ref) {
-                throw new Error(`Missing ref: ${prop}`);
-            }
-
-            if (type instanceof this.options.window.HTMLElement) {
-                if (type.isPrototypeOf(ref) === false) {
-                    throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
-                }   
-            }
-            else {
-                // @ts-ignore
-                if (type.prototype.isPrototypeOf(ref) === false) {
-                    // @ts-ignore
-                    throw new Error(`The ref "${prop}" must be an instance of ${type.name} (actual: ${ref.constructor.name})`);
-                }   
-
-            }
-        }
-
+        checkRefs(refs, annotation, this.options);
     }
 }
 
-export { DomScope, selectRefs, selectRefsExtended, walkDomScope };
+export { DomScope, checkRefs, selectRefs, selectRefsExtended, walkDomScope };
