@@ -17,6 +17,7 @@ export type HTMLElementInterface = {
     name: string;
     prototype: HTMLElement;
 };
+export type SelectRefsCallback = (currentElement: HTMLElement) => void;
 export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
 /** @module DomScope */
 /**
@@ -118,32 +119,35 @@ export class DomScope<T extends {
  *
  * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
  * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation - An object specifying the expected types for each reference.
- *
+ * @param {*} [options]
  * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
  */
 export function checkRefs(refs: {
     [key: string]: HTMLElement;
 }, annotation: {
     [key: string]: HTMLElementInterface | HTMLElement;
-}, options: any): void;
+}, options?: any): void;
 /**
  * Returns an object of child elements containing the ref attribute
  * @template {{[key:string]:HTMLElement}} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
+ * @param {{[key:string]: HTMLElementInterface|HTMLElement}|null} [annotation] - An object specifying the expected types for each reference.
  * @param {TypeDomScopeOptions} [options]
  * @returns {T}
  */
 export function selectRefs<T extends {
     [key: string]: HTMLElement;
-}>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, options?: TypeDomScopeOptions): T;
+}>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, annotation?: {
+    [key: string]: HTMLElementInterface | HTMLElement;
+} | null, options?: TypeDomScopeOptions): T;
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {(currentElement:HTMLElement)=>void} [custom_callback]
+ * @param {SelectRefsCallback|null} [custom_callback]
  * @param {TypeDomScopeOptions} [options]
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
-export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: (currentElement: HTMLElement) => void, options?: TypeDomScopeOptions): {
+export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: SelectRefsCallback | null, options?: TypeDomScopeOptions): {
     refs: {
         [key: string]: HTMLElement;
     };

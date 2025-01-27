@@ -18,6 +18,10 @@ export const REF_ATTR_NAME = "ref";
  */
 
 /**
+ * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
+ */
+
+/**
  * Checks if the element is a scope
  * @param {Element|HTMLElement} element 
  * @param {TypeAllDomScopeOptions} options 

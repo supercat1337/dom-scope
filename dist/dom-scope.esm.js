@@ -18,6 +18,10 @@ const REF_ATTR_NAME = "ref";
  */
 
 /**
+ * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
+ */
+
+/**
  * Checks if the element is a scope
  * @param {Element|HTMLElement} element 
  * @param {TypeAllDomScopeOptions} options 
@@ -67,7 +71,7 @@ function getOptions(options) {
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
- * @param {(currentElement:HTMLElement)=>void} [custom_callback] 
+ * @param {SelectRefsCallback|null} [custom_callback] 
  * @param {TypeDomScopeOptions} [options] 
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
@@ -153,10 +157,11 @@ function selectRefsExtended(root_element, custom_callback, options = {}) {
  * Returns an object of child elements containing the ref attribute
  * @template {{[key:string]:HTMLElement}} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
+ * @param {{[key:string]: HTMLElementInterface|HTMLElement}|null} [annotation] - An object specifying the expected types for each reference.
  * @param {TypeDomScopeOptions} [options] 
  * @returns {T}
  */
-function selectRefs(root_element, options) {
+function selectRefs(root_element, annotation, options) {
     /** @type {{[key:string]:HTMLElement}} */
     var refs = {};
     var _options = getOptions(options);
@@ -175,6 +180,11 @@ function selectRefs(root_element, options) {
     }
 
     walkDomScope(root_element, callback, _options);
+
+    if (annotation) {
+        checkRefs(refs, annotation);
+    }
+    
     return /** @type {T} */ (refs);
 }
 
@@ -220,12 +230,10 @@ function walkDomScope(root_element, callback, options) {
  * 
  * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
  * @param {{[key:string]: HTMLElementInterface|HTMLElement}} annotation - An object specifying the expected types for each reference.
- * 
+ * @param {*} [options] 
  * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
  */
 function checkRefs(refs, annotation, options) {
-
-    getOptions(options);
 
     for (let prop in annotation) {
         let ref = refs[prop];
@@ -233,15 +241,6 @@ function checkRefs(refs, annotation, options) {
         if (!ref) {
             throw new Error(`Missing ref: ${prop}`);
         }
-
-        /*
-        let _type = annotation[prop];
-        let type = typeof _type === "function"? Object.getPrototypeOf(_type): _type;
-
-        if (type.isPrototypeOf(ref) === false) {
-            throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
-        } 
-        */  
 
         // if type is interface, return prototype
         // @ts-ignore 
@@ -253,23 +252,6 @@ function checkRefs(refs, annotation, options) {
             throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
         }
 
-
-        /*
-
-        let type = annotation[prop];
-        if (type instanceof _options.window.HTMLElement) {
-            if (type.isPrototypeOf(ref) === false) {
-                throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
-            }   
-        }
-        else {
-            // @ts-ignore
-            if (type.prototype.isPrototypeOf(ref) === false) {
-                // @ts-ignore
-                throw new Error(`The ref "${prop}" must be an instance of ${type.name} (actual: ${ref.constructor.name})`);
-            }   
-        }
-        //*/
     }
 
 }

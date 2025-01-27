@@ -45,7 +45,7 @@ test("selectRefs", t => {
 </div>
 `;
 
-    let refs = selectRefs(body, { window: window });
+    let refs = selectRefs(body, null, { window: window });
 
     let entries = Object.entries(refs);
 
@@ -60,7 +60,75 @@ test("selectRefs", t => {
 });
 
 
-test("selectRefs (no window)", t => {
+test("selectRefs (with annotation)", t => {
+
+    const window = new Window({ url: 'https://localhost:8080' });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+
+    body.innerHTML = /* html*/`
+<span ref="a">a</span>
+<span ref="b">b</span>
+
+<div scope-ref="my-scope-1">
+    <span ref="a">a/1</span>
+    <span ref="b">b/1</span>
+</div>
+
+<div scope-ref="my-scope-2" id="my-block">    
+    <span ref="a">a/2</span>
+    <span ref="b">b/2</span>
+    <span id="foo">foo</span>
+
+    <div scope-ref="my-scope">    
+        <span ref="a">a/2/1</span>
+        <span ref="b">b/2/1</span>
+    </div>
+
+    <div scope-ref="my-scope-2">    
+        <span ref="a">a/2/2</span>
+        <span ref="b">b/2/2</span>
+    </div>
+
+</div>
+`;
+
+    const annotation = {
+       "a": window.HTMLSpanElement.prototype,
+       "b": window.HTMLSpanElement.prototype,
+    };
+
+    t.notThrows(() => {
+        // @ts-ignore
+        let refs = selectRefs(body, annotation, { window: window });        
+    });
+
+    const annotation1 = {
+        "a": window.HTMLSpanElement,
+        "b": window.HTMLSpanElement,
+     };
+ 
+     t.notThrows(() => {
+         // @ts-ignore
+         let refs = selectRefs(body, annotation1, { window: window });        
+     });
+
+    const annotation2 = {
+        "a": window.HTMLSpanElement.prototype,
+        "b": window.HTMLSpanElement.prototype,
+        "c": window.HTMLSpanElement.prototype
+     };
+ 
+     t.throws(() => {
+         // @ts-ignore
+         let refs = selectRefs(body, annotation2, { window: window });        
+     });
+
+    window.close();
+});
+
+
+test("selectRefs (no window object for tests)", t => {
     const window = new Window({ url: 'https://localhost:8080' });
     const document = window.document;
     const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));

@@ -5,7 +5,7 @@ import { getOptions, isScopeElement, SCOPE_AUTO_NAME_PREFIX } from "./tools.js";
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
- * @param {(currentElement:HTMLElement)=>void} [custom_callback] 
+ * @param {import("./tools.js").SelectRefsCallback|null} [custom_callback] 
  * @param {import("./tools.js").TypeDomScopeOptions} [options] 
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
@@ -91,10 +91,10 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
  * Returns an object of child elements containing the ref attribute
  * @template {{[key:string]:HTMLElement}} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
+ * @param {{[key:string]: import("./tools.js").HTMLElementInterface|HTMLElement}|null} [annotation] - An object specifying the expected types for each reference.
  * @param {import("./tools.js").TypeDomScopeOptions} [options] 
- * @returns {T}
  */
-export function selectRefs(root_element, options) {
+export function selectRefs(root_element, annotation, options) {
     /** @type {{[key:string]:HTMLElement}} */
     var refs = {};
     var _options = getOptions(options);
@@ -113,6 +113,11 @@ export function selectRefs(root_element, options) {
     }
 
     walkDomScope(root_element, callback, _options);
+
+    if (annotation) {
+        checkRefs(refs, annotation, _options);
+    }
+
     return /** @type {T} */ (refs);
 }
 
