@@ -12,7 +12,74 @@ This can be done by using identifiers in the attributes of the necessary element
 
 This library provides a simple way to create scopes inside the DOM and get references to the elements in the scope.
 
-### Example
+### Example 
+
+```js
+import { createFromHTML, selectRefs } from "dom-scope";
+
+const root = createFromHTML(/*html*/`
+    <span ref="a">1</span>
+    <span ref="b">1</span>
+
+    <div scope-ref="another_scope">
+        <span ref="a">2</span>
+        <span ref="b">2</span>
+        <span ref="c">2</span>
+    </div>
+
+    <span ref="c">1</span>
+`);
+
+const wrong_annotation = {
+    "a": HTMLElement,
+    "b": HTMLDivElement,
+    "c": HTMLSpanElement
+};
+
+try {
+    // select refs and check if they are correct
+    let refs = selectRefs(root, wrong_annotation);
+}
+catch (e) {
+    console.log(e.message);
+    // occures: The ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
+}
+
+const annotation = {
+    "a": HTMLSpanElement,
+    "b": HTMLSpanElement,
+    "c": HTMLSpanElement
+};
+
+let refs = selectRefs(root, annotation);
+const { a, b, c } = refs;
+
+console.log(a.textContent, b.textContent, c.textContent);
+// outputs: 1 1 1
+
+document.body.appendChild(root);
+```
+
+This JavaScript code creates a DOM element from an HTML string using the createFromHTML function, and then attempts to select references to elements within that DOM using the selectRefs function. The selectRefs function takes an optional annotation object that specifies the expected types of the referenced elements. If the actual types do not match the expected types, an error is thrown. The code demonstrates both a failed attempt with incorrect annotations and a successful attempt with correct annotations.
+
+An element with the `scope-ref` attribute defines a new scope within the DOM. A scope acts as an isolated section of the DOM that maintains unique identifiers for its elements.
+
+Consequently, the reference `c` targets an element with the text "1", excluding those with "2".
+
+### Advantages
+
+- type checking for the refs in static analysis and runtime
+- autocompletion for the refs
+- simple and easy to use
+- avoids naming conflicts
+- allows nested scopes
+- avoids the need for complex CSS selectors
+
+## Advanced Usage
+
+Alternatively, you can use the `DomScope` class to create scopes inside the DOM and get references to the elements in the scope.
+
+### Example with DomScope
 
 ```html
 <body>
@@ -42,7 +109,7 @@ console.log(b instanceof HTMLDivElement); // true
 console.log(c instanceof HTMLDivElement); // true
 ```
 
-dom-scope also provides full type support, so you can get autocompletion and type checking for your refs when using TypeScript. Additionally, you can check the refs at runtime using the "checkRefs" method.
+dom-scope supports full type safety, providing autocompletion and type checking for your refs in TypeScript. Additionally, you can validate the refs at runtime using the "checkRefs" method.
 
 ```js
 import { DomScope } from "dom-scope";
@@ -61,9 +128,9 @@ domScope.checkRefs({
 
 // another way to get typed scope is to use annotation object and then call checkRefs on it
 const annotation = {
-    a: HTMLDivElement.prototype,
-    b: HTMLDivElement.prototype,
-    c: HTMLDivElement.prototype
+    a: HTMLDivElement,
+    b: HTMLDivElement,
+    c: HTMLDivElement
 };
 
 let scope = /** @type {DomScope<typeof annotation>} */ (domScope.scopes["my-scope-1"]);
@@ -112,9 +179,10 @@ import { DomScope } from "dom-scope";
 
 const domScope = new DomScope(document.body);
 
-domScope.options.is_scope_element = function (element) {
+domScope.config.is_scope_element = function (element) {
     if (element.hasAttribute("custom-scope-attribute")) {
-        return element.getAttribute("custom-scope-attribute");
+        // determine if the element defines a named scope by checking the custom-scope-attribute value
+        return element.getAttribute("custom-scope-attribute") || "";
     }
 
     return false;

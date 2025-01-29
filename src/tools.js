@@ -5,17 +5,22 @@ export const SCOPE_AUTO_NAME_PREFIX = "$";
 export const REF_ATTR_NAME = "ref";
 
 
-/** 
- * @typedef {(element:Element|HTMLElement, options:TypeAllDomScopeOptions)=>string|null|false} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, window?: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root?: boolean}} TypeDomScopeOptions
- * @typedef {{ref_attr_name:string, window: *, is_scope_element?: TypeIsScopeElement, default_scope_name?: string|function():string, include_root: boolean}} TypeAllDomScopeOptions
-*/
 
 /**
- * @typedef {Object} HTMLElementInterface
- * @prop {string} name
- * @prop {HTMLElement} prototype
+ * @typedef {import("./types.d.ts").RefsAnnotation} RefsAnnotation 
  */
+
+/**
+ * @template {RefsAnnotation} T 
+ * @typedef {import("./types.d.ts").Refs<T>} Refs<T> 
+ */
+
+
+/** 
+ * @typedef {(element:Element|HTMLElement, settings:ScopeConfig)=>string|null|false} TypeIsScopeElement
+ * @typedef {{ref_attr_name?:string, window?: *, is_scope_element?: TypeIsScopeElement, include_root?: boolean}} ScopeSettings
+ * @typedef {{ref_attr_name:string, window: *, is_scope_element: TypeIsScopeElement|undefined, include_root: boolean}} ScopeConfig
+*/
 
 /**
  * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
@@ -24,14 +29,14 @@ export const REF_ATTR_NAME = "ref";
 /**
  * Checks if the element is a scope
  * @param {Element|HTMLElement} element 
- * @param {TypeAllDomScopeOptions} options 
+ * @param {ScopeConfig} settings 
  * @returns {false|string} returns scope name or false
  */
-export function isScopeElement(element, options) {
+export function isScopeElement(element, settings) {
 
     var value;
-    if (options.is_scope_element) {
-        value = options.is_scope_element(element, options);
+    if (settings.is_scope_element) {
+        value = settings.is_scope_element(element, settings);
     } else {
         value = element.getAttribute(SCOPE_ATTR_NAME);
     }
@@ -42,25 +47,24 @@ export function isScopeElement(element, options) {
 }
 
 /**
- * Creates options
- * @param {TypeDomScopeOptions} [options] 
- * @returns {TypeAllDomScopeOptions}
+ * Creates settings
+ * @param {ScopeSettings} [settings] 
+ * @returns {ScopeConfig}
  */
-export function getOptions(options) {
-    /** @type {TypeAllDomScopeOptions} */
+export function getConfig(settings) {
+    /** @type {ScopeConfig} */
     let init_data = {
         ref_attr_name: REF_ATTR_NAME,
         window: globalThis.window,
         is_scope_element: undefined,
-        default_scope_name: undefined,
-        include_root: true
+        include_root: false
     };
 
-    let _options = Object.assign({}, init_data, options);
+    let config = Object.assign({}, init_data, settings);
 
-    if (!_options.window) {
-        throw new Error("options.window is not defined");
+    if (!config.window) {
+        throw new Error("settings.window is not defined");
     }
 
-    return _options;
+    return config;
 }

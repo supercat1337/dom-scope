@@ -1,6 +1,6 @@
 {
   "name": "dom-scope",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Creates a scope within the DOM",
   "homepage": "https://github.com/supercat1337/dom-scope",
   "repository": {
@@ -19,14 +19,16 @@
   "scripts": {
     "preinstall": "npm i -g esbuild && npm i -g rollup",
     "test": "c8 ava",
-    "build": "npm run remove_type_files && npm run build_esm && npm run build_esm_min && npm run fix_jsdoc && npm run create_types",
+    "build": "npm run remove_type_files && npm run build_esm && npm run build_esm_min && npm run before_create_types && npm run create_types && npm run after_create_types",
     "build_esm": "rollup ./src/index.js --file ./dist/dom-scope.esm.js --format es",
     "build_esm_min": "esbuild --minify --bundle --platform=neutral --legal-comments=none ./dist/dom-scope.esm.js --outfile=./dist/dom-scope.esm.min.js",
     "build_esm_bundle": "rollup ./src/index.js --file ./dist/dom-scope.bundle.esm.js --format es -p ./node_modules/@rollup/plugin-node-resolve",
     "build_esm_bundle_min": "esbuild --minify --bundle --platform=neutral --legal-comments=none ./src/index.js --outfile=./dist/dom-scope.bundle.esm.min.js",
     "create_types": "npx -p typescript tsc --project my.tsconfig.types.json",
-    "remove_type_files": "del /q *.d.ts *.d.ts.map && cd dist && del /s /q *.d.ts *.d.ts.map && cd ../src && del /s /q *.d.ts *.d.ts.map && cd ..",
-    "fix_jsdoc": "node ./scripts/fix_jsdoc.js"
+    "remove_type_files": "del /q *.d.ts *.d.ts.map && cd dist && del /s /q *.d.ts *.d.ts.map && cd ..",
+    "before_create_types": "node ./scripts/before_create_types.js",
+    "after_create_types": "node ./scripts/after_create_types.js"
+
   },
   "moduleResolution": "node",
   "author": "SuperCat",

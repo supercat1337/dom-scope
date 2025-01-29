@@ -1,15 +1,16 @@
 // @ts-check
 
-import { getOptions, isScopeElement, SCOPE_AUTO_NAME_PREFIX } from "./tools.js";
+import { getConfig, isScopeElement, SCOPE_AUTO_NAME_PREFIX } from "./tools.js";
+
 
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {import("./tools.js").SelectRefsCallback|null} [custom_callback] 
- * @param {import("./tools.js").TypeDomScopeOptions} [options] 
+ * @param {import("./tools.js").ScopeSettings} [settings] 
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
-export function selectRefsExtended(root_element, custom_callback, options = {}) {
+export function selectRefsExtended(root_element, custom_callback, settings = {}) {
 
     /** @type {{[key:string]:HTMLElement}} */
     var refs = {};
@@ -20,7 +21,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
     /** @type {HTMLElement[]} */
     var unnamed_scopes = [];
 
-    var _options = getOptions(options);
+    var config = getConfig(settings);
 
     /**
      * 
@@ -28,20 +29,24 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
      */
     function callback(currentNode) {
 
-        var ref_name = currentNode.getAttribute(_options.ref_attr_name);
+        var ref_name = currentNode.getAttribute(config.ref_attr_name);
 
         if (ref_name != null) {
             if (ref_name != "") {
                 if (!refs[ref_name]) {
                     refs[ref_name] = currentNode;
                 } else {
-                    console.warn(`Element has reference #${ref_name} which is already used\n`, `\nelement: `, currentNode, `\nreference #${ref_name}: `, refs[ref_name], `\nscope root: `, root_element);
+                    if (globalThis.window) {
+                        console.warn(`Element has reference #${ref_name} which is already used\n`, `\nelement: `, currentNode, `\nreference #${ref_name}: `, refs[ref_name], `\nscope root: `, root_element);
+                    } else {
+                        console.warn(`Element has reference #${ref_name} which is already used\n`);
+                    }
                 }
             }
         }
 
         if (currentNode != root_element) {
-            var ref_scope_name = isScopeElement(currentNode, _options);
+            var ref_scope_name = isScopeElement(currentNode, config);
 
             if (typeof ref_scope_name != "string") return;
 
@@ -49,7 +54,12 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
                 if (!scope_refs[ref_scope_name]) {
                     scope_refs[ref_scope_name] = currentNode;
                 } else {
-                    console.warn(`scope #${ref_scope_name} is already used`, currentNode);
+                    if (globalThis.window) {
+                        console.warn(`scope #${ref_scope_name} is already used`, currentNode);
+                    } else {
+                        console.warn(`scope #${ref_scope_name} is already used`);
+                    }
+
                     unnamed_scopes.push(currentNode);
                 }
             } else {
@@ -63,8 +73,8 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
     }
 
-    if (_options.include_root === true) {
-        if (root_element instanceof options.window.HTMLElement) {
+    if (config.include_root === true) {
+        if (root_element instanceof config.window.HTMLElement) {
             refs.root = /** @type {HTMLElement} */ (root_element);
 
             if (custom_callback) {
@@ -73,7 +83,7 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
         }
     }
 
-    walkDomScope(root_element, callback, _options);
+    walkDomScope(root_element, callback, config);
 
     var index = 0;
     unnamed_scopes.forEach((unnamed_scope_element) => {
@@ -89,23 +99,23 @@ export function selectRefsExtended(root_element, custom_callback, options = {}) 
 
 /**
  * Returns an object of child elements containing the ref attribute
- * @template {{[key:string]:HTMLElement}} T
+ * @template {import("./tools.js").RefsAnnotation} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
- * @param {{[key:string]: import("./tools.js").HTMLElementInterface|HTMLElement}|null} [annotation] - An object specifying the expected types for each reference.
- * @param {import("./tools.js").TypeDomScopeOptions} [options] 
- * @returns {T}
+ * @param {T|null} [annotation] - An object specifying the expected types for each reference.
+ * @param {import("./tools.js").ScopeSettings} [settings] 
+ * @returns {import("./tools.js").Refs<T>}
  */
-export function selectRefs(root_element, annotation, options) {
+export function selectRefs(root_element, annotation, settings) {
     /** @type {{[key:string]:HTMLElement}} */
     var refs = {};
-    var _options = getOptions(options);
+    var config = getConfig(settings);
 
     /**
      * 
      * @param {HTMLElement} currentNode 
      */
     function callback(currentNode) {
-        let ref_name = currentNode.getAttribute(_options.ref_attr_name);
+        let ref_name = currentNode.getAttribute(config.ref_attr_name);
 
         if (ref_name) {
             refs[ref_name] = currentNode;
@@ -113,24 +123,30 @@ export function selectRefs(root_element, annotation, options) {
 
     }
 
-    walkDomScope(root_element, callback, _options);
-
-    if (annotation) {
-        checkRefs(refs, annotation, _options);
+    if (config.include_root === true) {
+        if (root_element instanceof config.window.HTMLElement) {
+            refs.root = /** @type {HTMLElement} */ (root_element);
+        }
     }
 
-    return /** @type {T} */ (refs);
+    walkDomScope(root_element, callback, config);
+
+    if (annotation) {
+        checkRefs(refs, annotation);
+    }
+
+    return /** @type {import("./types.d.ts").Refs<T>} */ (refs);
 }
 
 /**
  * Walks the DOM tree of the scope and calls the callback for each element
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element 
  * @param {(currentElement:HTMLElement)=>void} callback 
- * @param {import("./tools.js").TypeDomScopeOptions} [options] the attribute name contains a name of a scope
+ * @param {import("./tools.js").ScopeSettings} [settings] the attribute name contains a name of a scope
  */
-export function walkDomScope(root_element, callback, options) {
+export function walkDomScope(root_element, callback, settings) {
 
-    var _options = getOptions(options);
+    var config = getConfig(settings);
 
     /**
      * @param {Node} _node 
@@ -141,16 +157,22 @@ export function walkDomScope(root_element, callback, options) {
 
         var parentElement = node.parentElement;
 
-        if (parentElement && parentElement != root_element && isScopeElement(parentElement, _options) !== false) {
+        if (parentElement && parentElement != root_element && isScopeElement(parentElement, config) !== false) {
             return /* NodeFilter.FILTER_REJECT */ 2
         }
 
         return /* NodeFilter.FILTER_ACCEPT */ 1
     }
 
-    const tw = _options.window.document.createTreeWalker(root_element, /* NodeFilter.SHOW_ELEMENT */ 1, scope_filter);
+    const tw = config.window.document.createTreeWalker(root_element, /* NodeFilter.SHOW_ELEMENT */ 1, scope_filter);
 
     var currentNode;
+
+    if (config.include_root === true) {
+        if (root_element instanceof config.window.HTMLElement) {
+            callback(/** @type {HTMLElement} */ (root_element));
+        }
+    }
 
     while (currentNode = /** @type {HTMLElement} */ (tw.nextNode())) {
         callback(currentNode);
@@ -163,11 +185,10 @@ export function walkDomScope(root_element, callback, options) {
  * Throws an error if any reference is missing or does not match the expected type.
  * 
  * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
- * @param {{[key:string]: import("./tools.js").HTMLElementInterface|HTMLElement}} annotation - An object specifying the expected types for each reference.
- * @param {*} [options] 
+ * @param {import("./tools.js").RefsAnnotation} annotation - An object specifying the expected types for each reference.
  * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
  */
-export function checkRefs(refs, annotation, options) {
+export function checkRefs(refs, annotation) {
 
     for (let prop in annotation) {
         let ref = refs[prop];
@@ -177,12 +198,11 @@ export function checkRefs(refs, annotation, options) {
         }
 
         // if type is interface, return prototype
-        // @ts-ignore 
-        const type = annotation[prop].constructor.name === "Function"? annotation[prop].prototype: annotation[prop];
-        //console.log(type, annotation[prop]);
+
+        const type = typeof annotation[prop] === "function" ? annotation[prop].prototype : annotation[prop];
 
         if (type.isPrototypeOf(ref) === false) {
-            
+
             throw new Error(`The ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`);
         }
 

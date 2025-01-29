@@ -12,6 +12,11 @@ function outputElementInfo(element) {
     return `${element.tagName} ${attrs}`
 }
 
+test("DomScope (root == null)", t => {
+    // @ts-ignore
+    t.throws(() => new DomScope(null));
+});
+
 test("DomScope (root, contains, refs)", t => {
 
     const window = new Window({ url: 'https://localhost:8080' });
@@ -47,6 +52,9 @@ body.innerHTML = /* html*/`
 
     let scope = new DomScope(body, {window: window});
     
+    let refs = scope.refs;
+    //refs.a
+
     if (!(scope.root == body)) t.fail();
     // outputs: true
 
@@ -66,9 +74,15 @@ body.innerHTML = /* html*/`
     t.is(output_4, "a/2 b/2");
 
     const block_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("my-block")));
+    
     let another_scope = new DomScope(block_element, {window: window});
-    another_scope.options.window = window;
+    another_scope.config.window = window;
 
+    let another_scope_refs = another_scope.refs;
+
+    another_scope_refs.a.innerHTML = "a/2";
+    another_scope_refs.b.innerHTML = "b/2";
+    
     let output_5 = [another_scope.refs.a.innerText, another_scope.refs.b.innerText].join(" ")
     t.is(output_5, "a/2 b/2");
 
@@ -114,9 +128,9 @@ test("DomScope (scopes)", t => {
     let scope = new DomScope(body, {window: window});
     let scopes = scope.scopes;
     let output_1 = Object.entries(scopes).map(item => item[0]).join(",");
-    if (output_1 != "my-scope-1,my-scope-2") t.fail(output_1);
 
-    t.pass();
+    t.is(output_1, "my-scope-1,my-scope-2");
+
     window.close();
 });
 
@@ -154,13 +168,9 @@ body.innerHTML = /* html*/`
 
     let scope = new DomScope(body, {window: window});
 
-    let output_1 = (!!scope.querySelector("#foo")).toString();
-    if (output_1 != "false") t.fail(output_1);
+    t.false(!!scope.querySelector("foo"));
+    t.true(!!scope.querySelector("#my-block"));
 
-    let output_2 = (!!scope.querySelector("#my-block")).toString();
-    if (output_2 != "true") t.fail(output_2);
-
-    t.pass();
     window.close();
 });
 
@@ -198,13 +208,9 @@ test("DomScope (querySelectorAll)", t => {
 
     let scope = new DomScope(body, {window: window});
 
-    let output_1 = (scope.querySelectorAll("#foo").length).toString();
-    if (output_1 != "0") t.fail(output_1);
+    t.is(scope.querySelectorAll("foo").length, 0);
+    t.is(scope.querySelectorAll("#my-block").length, 1);
 
-    let output_2 = (scope.querySelectorAll("#my-block").length).toString();
-    if (output_2 != "1") t.fail(output_2);
-
-    t.pass();
     window.close();
 });
 
@@ -306,12 +312,29 @@ test("DomScope (destroy)", t => {
     scope.destroy();
     t.true(scope.isDestroyed);
 
-    try {
-        let output_2 = (scope.querySelectorAll("#my-block").length).toString();
-        t.fail();
-    } catch (e) {
-        t.pass();
-    }
+    t.throws(() => {
+        scope.querySelector("#my-block");
+    });
+
+    t.throws(() => {
+        scope.querySelectorAll("*");
+    });
+
+    t.throws(() => {
+        scope.walk(() => {});
+    });
+
+    t.throws(() => {
+        scope.checkRefs({});
+    });
+
+    t.throws(() => {
+        scope.update();
+    });
+
+    t.throws(() => {
+        scope.contains(body);
+    });
 
     window.close();
 });
@@ -398,7 +421,7 @@ test("DomScope (custom scopes)", t => {
 
     let scope = new DomScope(body, {window: window});
 
-    scope.options.is_scope_element = function (element) {
+    scope.config.is_scope_element = function (element) {
         if (element.tagName == "SLOT") {
             return element.getAttribute("name");
         }
@@ -448,16 +471,9 @@ test("DomScope (isScopeElement)", t => {
     let scope_element = /** @type {HTMLElement} */ (body.querySelector(`[scope-ref="my-scope-1"]`));
     let is_scope_2 = scope.isScopeElement(scope_element);
 
+    t.is(is_scope_1, false);
+    t.is(is_scope_2, true);
 
-    if (is_scope_1 !== false) {
-        t.fail("document.body is not a scope");
-    }
-
-    if (is_scope_2!==true) {
-        t.fail(`[scope-ref="my-scope-1"] is scope`);
-    }
-    
-    t.pass();
     window.close();
 });
 
@@ -498,15 +514,10 @@ test("DomScope (unnamed scopes)", t => {
 
     let scope_names = Object.keys(scope.scopes);
     
-    if (scope_names.length != 4) {
-        t.fail(`scope_names.length = ${scope_names.length}`);
-    }
+    t.is(scope_names.length, 4);
 
-    if (JSON.stringify(scope_names.sort())!=JSON.stringify(["my-scope-1", "$0", "$1", "$2"].sort())) {
-        t.fail([JSON.stringify(scope_names.sort())," !=" , JSON.stringify(["my-scope-1", "$0", "$1", "$2"].sort())].join(" "));
-    }
+    t.deepEqual(scope_names.sort(), ["my-scope-1", "$0", "$1", "$2"].sort());
 
-    t.pass();
     window.close();
 });
 

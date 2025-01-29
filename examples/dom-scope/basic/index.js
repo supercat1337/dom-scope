@@ -6,16 +6,22 @@ globalThis.DomScope = DomScope;
 
 const annotation = {
     "a": HTMLSpanElement.prototype,
-    "b": HTMLDivElement.prototype
+    "b": HTMLSpanElement.prototype
 };
 
-/** @type {DomScope<typeof annotation>} */
+const annotation2 = {
+    "a": HTMLSpanElement,
+    "b": HTMLSpanElement
+};
+
+/** @type {DomScope<typeof annotation2>} */
 let scope = new DomScope(document.body);
 
 console.log(scope.root == document.body);
 // outputs: true
 
 scope.checkRefs(annotation);
+scope.checkRefs(annotation2);
 
 scope.refs.a.innerText = "a";
 scope.refs.b.innerText = "b";

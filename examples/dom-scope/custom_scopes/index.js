@@ -5,7 +5,7 @@ import { DomScope } from "../../../dist/dom-scope.esm.js";
 
 let scope = new DomScope(document.body);
 
-scope.options.is_scope_element = function (element) {
+scope.config.is_scope_element = function (element) {
     if (element.tagName == "SLOT") {
         return element.getAttribute("name") || "";
     }

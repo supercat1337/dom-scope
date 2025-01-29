@@ -1,44 +1,45 @@
 // @ts-check
 
-import { selectRefs } from "../../dist/dom-scope.esm.js";
+import { createFromHTML, selectRefs } from "../../dist/dom-scope.esm.js";
+
+const root = createFromHTML(/*html*/`
+    <span ref="a">1</span>
+    <span ref="b">1</span>
+
+    <div scope-ref="another_scope">
+        <span ref="a">2</span>
+        <span ref="b">2</span>
+        <span ref="c">2</span>
+    </div>
+
+    <span ref="c">1</span>
+`);
 
 const wrong_annotation = {
-    "a": HTMLSpanElement,
-    "b": HTMLDivElement
+    "a": HTMLElement,
+    "b": HTMLDivElement,
+    "c": HTMLSpanElement
 };
 
 try {
     // select refs and check if they are correct
-    let refs = selectRefs(document.body, wrong_annotation);
+    let refs = selectRefs(root, wrong_annotation);
 }
 catch (e) {
-    // throws error because ref 'b' is HTMLDivElement, not HTMLSpanElement
     console.log(e.message);
-    // The ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
+    // occures: The ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
 }
 
 const annotation = {
     "a": HTMLSpanElement,
-    "b": HTMLSpanElement
+    "b": HTMLSpanElement,
+    "c": HTMLSpanElement
 };
 
-// select refs and check if they are correct
-let refs = selectRefs(document.body, annotation);
+let refs = selectRefs(root, annotation);
+const { a, b, c } = refs;
 
-// another format of annotation to use types
-const annotation_2 = {
-    "a": HTMLSpanElement.prototype,
-    "b": HTMLSpanElement.prototype
-};
+console.log(a.textContent, b.textContent, c.textContent);
+// outputs: 1 1 1
 
-// select refs and check if they are correct
-/** @type {typeof annotation_2} */
-let refs_2 = selectRefs(document.body, annotation_2);
-
-let { a, b } = refs_2;
-
-a.innerText = "a";
-b.innerText = "b";
-
-console.log(a.innerText, b.innerText);
-// outputs: a b
+document.body.appendChild(root);

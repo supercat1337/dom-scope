@@ -1,16 +1,14 @@
 // @ts-check
-/** @module DomScope */
 
 import { checkRefs, selectRefsExtended, walkDomScope } from "./api.js";
-import { getOptions, isScopeElement } from "./tools.js";
+import { getConfig, isScopeElement } from "./tools.js";
 
 /**
  * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
  */
 
-
 /**
- * @template {{[key:string]:HTMLElement}} T
+ * @template {import("./tools.js").RefsAnnotation} T
  */
 export class DomScope {
 
@@ -22,26 +20,26 @@ export class DomScope {
     /** @type {Boolean} */
     #first_time_call = true
 
-    /** @type {T} */
+    /** @type {import("./tools.js").Refs<T>} */
     #refs
 
     /** @type {{[key:string]:DomScope}} */
     #scopes
 
-    /** @type {import("./tools.js").TypeAllDomScopeOptions} */
-    options 
+    /** @type {import("./tools.js").ScopeConfig} */
+    config 
 
 
     /**
      * Creates an instance of DomScope.
      * @param {RootType} root_element the root element
-     * @param {import("./tools.js").TypeDomScopeOptions} [options] 
+     * @param {import("./tools.js").ScopeSettings} [settings] 
      */
-    constructor(root_element, options) {
+    constructor(root_element, settings) {
         if (root_element == null) throw new Error("root_element is null");
 
         this.#root_element = root_element;
-        this.options = getOptions(options);
+        this.config = getConfig(settings);
     }
 
     /**
@@ -54,7 +52,7 @@ export class DomScope {
 
     /** 
      * Returns the object containing html elements with ref attribute
-     * @type {T} 
+     * @type {import("./tools.js").Refs<T>}
      * */
     get refs() {
         if (this.#first_time_call) {
@@ -83,15 +81,15 @@ export class DomScope {
     update(callback) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
-        let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.options);
+        let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.config);
 
-        this.#refs = /** @type {T} */ (refs);
+        this.#refs = /** @type {import("./tools.js").Refs<T>} */ (refs);
 
         /** @type {{[key:string]:DomScope}} */
         let dom_scopes = {};
 
         for (let scope_name in scope_refs) {
-            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name], this.options);
+            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name], this.config);
         }
 
         this.#scopes = dom_scopes;
@@ -164,7 +162,7 @@ export class DomScope {
     walk(callback) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
-        walkDomScope(this.#root_element, callback, this.options);
+        walkDomScope(this.#root_element, callback, this.config);
     }
 
     /**
@@ -178,13 +176,13 @@ export class DomScope {
 
         this.#first_time_call = false;
 
-        // @ts-expect-error
+        // @ts-ignore
         this.#refs = {};
 
         this.#scopes = {};
 
-        // @ts-expect-error
-        this.options = {};
+        // @ts-ignore
+        this.config = {};
     }
 
     /**
@@ -193,7 +191,7 @@ export class DomScope {
      * @returns {boolean}
      */
     isScopeElement(element) {
-        return !!isScopeElement(element, this.options);
+        return !!isScopeElement(element, this.config);
     }
 
     /**
@@ -207,7 +205,7 @@ export class DomScope {
 
     /**
      * Checks if all references in the scope are correct. If not, throws an error
-     * @param {{[key:string]: import("./tools.js").HTMLElementInterface|HTMLElement}} annotation Object with property names as keys and function constructors as values
+     * @param {import("./tools.js").RefsAnnotation} annotation Object with property names as keys and function constructors as values
      * @example
      * const scope = new DomScope(my_element);
      * scope.checkRefs({
@@ -217,9 +215,7 @@ export class DomScope {
      */
     checkRefs(annotation) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
-
-        let refs = this.refs;
-        checkRefs(refs, annotation, this.options);
+        checkRefs(this.refs, annotation);
     }
 }
 

@@ -1,2 +1,1 @@
-export { DomScope, selectRefs, selectRefsExtended, walkDomScope } from "./dist/dom-scope.esm.js";
-//# sourceMappingURL=index.d.ts.map
+export { DomScope, selectRefs, selectRefsExtended, walkDomScope, checkRefs, createFromHTML } from "./dist/dom-scope.esm.js";
