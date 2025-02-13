@@ -140,6 +140,15 @@ export function createFromHTML(html: string, options?: {
     window?: any;
 }): DocumentFragment;
 /**
+ * Generates a unique id with an optional custom prefix. If a prefix is supplied, the
+ * generated id will be of the form `<prefix>_<number>`. If no prefix is supplied, the
+ * generated id will be of the form `id_<number>`. The generated id is guaranteed to be
+ * unique per prefix.
+ * @param {string} [custom_prefix] The custom prefix to use when generating the id.
+ * @returns {string} The generated id.
+ */
+export function generateId(custom_prefix?: string): string;
+/**
  * Returns an object of child elements containing the ref attribute
  * @template {RefsAnnotation} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
