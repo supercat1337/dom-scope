@@ -188,10 +188,16 @@ function selectRefs(root_element, annotation, settings) {
         let ref_name = currentNode.getAttribute(config.ref_attr_name);
 
         if (ref_name) {
-            refs[ref_name] = currentNode;
+            if (annotation) {
+                if (annotation[ref_name]) {
+                    refs[ref_name] = currentNode;
+                }
+            } else {
+                refs[ref_name] = currentNode;
+            }
         }
-
     }
+
 
     if (config.include_root === true) {
         if (root_element instanceof config.window.HTMLElement) {
@@ -240,7 +246,7 @@ function walkDomScope(root_element, callback, settings) {
 
     if (config.include_root === true) {
         if (root_element instanceof config.window.HTMLElement) {
-            callback(/** @type {HTMLElement} */ (root_element));
+            callback(/** @type {HTMLElement} */(root_element));
         }
     }
 
