@@ -13,18 +13,22 @@ export type Refs<T extends RefsAnnotation = { [key: string]: HTMLElement }> = {
     [P in keyof T]: T[P] extends HTMLElementConstructor ? T[P]["prototype"] : T[P] extends HTMLElement ? T[P] : HTMLElement;
 };
 
-export type TypeIsScopeElement = (element: Element | HTMLElement, settings: ScopeConfig) => string | null | false;
-export type ScopeSettings = {
+export type TypeIsScopeElement = (element: Element | HTMLElement, options: ScopeConfig) => string | null | false;
+export type ScopeOptions = {
     ref_attr_name?: string;
+    scope_ref_attr_name?: string;
     window?: any;
     is_scope_element?: TypeIsScopeElement;
     include_root?: boolean;
+    scope_auto_name_prefix?: string;
 };
 export type ScopeConfig = {
     ref_attr_name: string;
+    scope_ref_attr_name: string;
     window: any;
     is_scope_element: TypeIsScopeElement | undefined;
     include_root: boolean;
+    scope_auto_name_prefix: string;
 };
 export type SelectRefsCallback = (currentElement: HTMLElement) => void;
 export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
@@ -38,9 +42,9 @@ export class DomScope<T extends RefsAnnotation> {
     /**
      * Creates an instance of DomScope.
      * @param {RootType} root_element the root element
-     * @param {ScopeSettings} [settings]
+     * @param {ScopeOptions} [options]
      */
-    constructor(root_element: RootType, settings?: ScopeSettings);
+    constructor(root_element: RootType, options?: ScopeOptions);
     /** @type {ScopeConfig} */
     config: ScopeConfig;
     /**
@@ -63,7 +67,7 @@ export class DomScope<T extends RefsAnnotation> {
     /**
      * Updates refs and scopes objects
      * @param {(currentElement:Element|HTMLElement)=>void} [callback]
-    */
+     */
     update(callback?: (currentElement: Element | HTMLElement) => void): void;
     /**
      * Searches an element with css selector in current DomScope
@@ -153,18 +157,18 @@ export function generateId(custom_prefix?: string): string;
  * @template {RefsAnnotation} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {T|null} [annotation] - An object specifying the expected types for each reference.
- * @param {ScopeSettings} [settings]
+ * @param {ScopeOptions} [options]
  * @returns {Refs<T>}
  */
-export function selectRefs<T extends RefsAnnotation>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, annotation?: T | null, settings?: ScopeSettings): Refs<T>;
+export function selectRefs<T extends RefsAnnotation>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, annotation?: T | null, options?: ScopeOptions): Refs<T>;
 /**
  * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {SelectRefsCallback|null} [custom_callback]
- * @param {ScopeSettings} [settings]
+ * @param {ScopeOptions} [options]
  * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
  */
-export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: SelectRefsCallback | null, settings?: ScopeSettings): {
+export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: SelectRefsCallback | null, options?: ScopeOptions): {
     refs: {
         [key: string]: HTMLElement;
     };
@@ -173,9 +177,20 @@ export function selectRefsExtended(root_element: Element | HTMLElement | Documen
     };
 };
 /**
+ * Sets default options for DomScope
+ * @param {ScopeOptions} options
+ */
+export function setDomScopeOptions(options: ScopeOptions): void;
+/**
+ * Changes the default attribute names to use data attributes instead of custom attributes. This way you can use DomScope in a context where custom attributes are not allowed.
+ * @param {boolean} [enabled=true] Set to false to disable using data attributes.
+ * @returns {void}
+ */
+export function useDataAttributes(enabled?: boolean): void;
+/**
  * Walks the DOM tree of the scope and calls the callback for each element
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {(currentElement:HTMLElement)=>void} callback
- * @param {ScopeSettings} [settings] the attribute name contains a name of a scope
+ * @param {ScopeOptions} [options] the attribute name contains a name of a scope
  */
-export function walkDomScope(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, settings?: ScopeSettings): void;
+export function walkDomScope(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: ScopeOptions): void;

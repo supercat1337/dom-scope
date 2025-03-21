@@ -11,35 +11,33 @@ import { getConfig, isScopeElement } from "./tools.js";
  * @template {import("./tools.js").RefsAnnotation} T
  */
 export class DomScope {
-
     #is_destroyed = false;
 
     /** @type {RootType} */
-    #root_element
+    #root_element;
 
     /** @type {Boolean} */
-    #first_time_call = true
+    #first_time_call = true;
 
     /** @type {import("./tools.js").Refs<T>} */
-    #refs
+    #refs;
 
     /** @type {{[key:string]:DomScope}} */
-    #scopes
+    #scopes;
 
     /** @type {import("./tools.js").ScopeConfig} */
-    config 
-
+    config;
 
     /**
      * Creates an instance of DomScope.
      * @param {RootType} root_element the root element
-     * @param {import("./tools.js").ScopeSettings} [settings] 
+     * @param {import("./tools.js").ScopeOptions} [options]
      */
-    constructor(root_element, settings) {
+    constructor(root_element, options) {
         if (root_element == null) throw new Error("root_element is null");
 
         this.#root_element = root_element;
-        this.config = getConfig(settings);
+        this.config = getConfig(options);
     }
 
     /**
@@ -50,7 +48,7 @@ export class DomScope {
         return this.#root_element;
     }
 
-    /** 
+    /**
      * Returns the object containing html elements with ref attribute
      * @type {import("./tools.js").Refs<T>}
      * */
@@ -64,7 +62,7 @@ export class DomScope {
 
     /**
      * Returns the object containing children DomScopes
-     * @type {{[key:string]:DomScope}} 
+     * @type {{[key:string]:DomScope}}
      * */
     get scopes() {
         if (this.#first_time_call) {
@@ -77,11 +75,15 @@ export class DomScope {
     /**
      * Updates refs and scopes objects
      * @param {(currentElement:Element|HTMLElement)=>void} [callback]
-    */
+     */
     update(callback) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
 
-        let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.config);
+        let { refs, scope_refs } = selectRefsExtended(
+            this.#root_element,
+            callback,
+            this.config
+        );
 
         this.#refs = /** @type {import("./tools.js").Refs<T>} */ (refs);
 
@@ -89,7 +91,10 @@ export class DomScope {
         let dom_scopes = {};
 
         for (let scope_name in scope_refs) {
-            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name], this.config);
+            dom_scopes[scope_name] = new DomScope(
+                scope_refs[scope_name],
+                this.config
+            );
         }
 
         this.#scopes = dom_scopes;
@@ -98,7 +103,7 @@ export class DomScope {
 
     /**
      * Searches an element with css selector in current DomScope
-     * @param {string} query 
+     * @param {string} query
      * @returns {null|Element}
      */
     querySelector(query) {
@@ -112,7 +117,7 @@ export class DomScope {
 
     /**
      * Searches elements with css selector in current DomScope
-     * @param {string} query 
+     * @param {string} query
      * @returns {HTMLElement[]}
      */
     querySelectorAll(query) {
@@ -125,7 +130,8 @@ export class DomScope {
         var result = [];
 
         for (let i = 0; i < found_results.length; i++) {
-            if (this.contains(found_results[i], true)) result.push( /** @type {HTMLElement} */(found_results[i]));
+            if (this.contains(found_results[i], true))
+                result.push(/** @type {HTMLElement} */ (found_results[i]));
         }
 
         return result;
@@ -133,8 +139,8 @@ export class DomScope {
 
     /**
      * Check if current DomScope constains the element
-     * @param {Node} element 
-     * @param {boolean} [check_only_child_scopes=false] 
+     * @param {Node} element
+     * @param {boolean} [check_only_child_scopes=false]
      * @returns {Boolean}
      */
     contains(element, check_only_child_scopes = false) {
@@ -157,7 +163,7 @@ export class DomScope {
 
     /**
      * Walks through all elements in the scope
-     * @param {(currentElement:HTMLElement)=>void} callback 
+     * @param {(currentElement:HTMLElement)=>void} callback
      */
     walk(callback) {
         if (this.#is_destroyed) throw new Error("Object is already destroyed");
@@ -166,7 +172,7 @@ export class DomScope {
     }
 
     /**
-     * Destroys the instance 
+     * Destroys the instance
      */
     destroy() {
         this.#is_destroyed = true;
@@ -187,7 +193,7 @@ export class DomScope {
 
     /**
      * Checks if element is scope
-     * @param {Element|HTMLElement} element 
+     * @param {Element|HTMLElement} element
      * @returns {boolean}
      */
     isScopeElement(element) {
@@ -201,7 +207,6 @@ export class DomScope {
     get isDestroyed() {
         return this.#is_destroyed;
     }
-
 
     /**
      * Checks if all references in the scope are correct. If not, throws an error
@@ -218,4 +223,3 @@ export class DomScope {
         checkRefs(this.refs, annotation);
     }
 }
-

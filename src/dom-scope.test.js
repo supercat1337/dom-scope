@@ -2,28 +2,32 @@
 
 import { DomScope } from "./../src/index.js";
 import test from "./../node_modules/ava/entrypoints/main.mjs";
-import { Window } from 'happy-dom';
+import { Window } from "happy-dom";
 
 /**
- * @param {HTMLElement} element 
+ * @param {HTMLElement} element
  */
 function outputElementInfo(element) {
-    let attrs = element.getAttributeNames().map(attr_name => attr_name + "=" + element.getAttribute(attr_name)).join(" ");
-    return `${element.tagName} ${attrs}`
+    let attrs = element
+        .getAttributeNames()
+        .map((attr_name) => attr_name + "=" + element.getAttribute(attr_name))
+        .join(" ");
+    return `${element.tagName} ${attrs}`;
 }
 
-test("DomScope (root == null)", t => {
+test("DomScope (root == null)", (t) => {
     // @ts-ignore
     t.throws(() => new DomScope(null));
 });
 
-test("DomScope (root, contains, refs)", t => {
+test("DomScope (root, contains, refs)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-    const window = new Window({ url: 'https://localhost:8080' });
-const document = window.document;
-const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-
-body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
 <span ref="a">a</span>
 <span ref="b">b</span>
 
@@ -50,8 +54,8 @@ body.innerHTML = /* html*/`
 </div>
 `;
 
-    let scope = new DomScope(body, {window: window});
-    
+    let scope = new DomScope(body, { window: window });
+
     let refs = scope.refs;
     //refs.a
 
@@ -62,43 +66,56 @@ body.innerHTML = /* html*/`
 
     t.is(output_1, "a b");
 
-    let output_2 = Object.entries(scope.scopes).map(item => item[0]).join(",");
+    let output_2 = Object.entries(scope.scopes)
+        .map((item) => item[0])
+        .join(",");
     if (output_2 != "my-scope-1,my-scope-2") t.fail(output_1);
 
     // @ts-ignore
-    let output_3 = (scope.scopes["my-scope-2"].root.getAttribute("id"));
+    let output_3 = scope.scopes["my-scope-2"].root.getAttribute("id");
     t.is(output_3, "my-block");
 
-
-    let output_4 = [scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText].join(" ")
+    let output_4 = [
+        scope.scopes["my-scope-2"].refs.a.innerText,
+        scope.scopes["my-scope-2"].refs.b.innerText,
+    ].join(" ");
     t.is(output_4, "a/2 b/2");
 
-    const block_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("my-block")));
-    
-    let another_scope = new DomScope(block_element, {window: window});
+    const block_element = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.getElementById("my-block"))
+    );
+
+    let another_scope = new DomScope(block_element, { window: window });
     another_scope.config.window = window;
 
     let another_scope_refs = another_scope.refs;
 
     another_scope_refs.a.innerHTML = "a/2";
     another_scope_refs.b.innerHTML = "b/2";
-    
-    let output_5 = [another_scope.refs.a.innerText, another_scope.refs.b.innerText].join(" ")
+
+    let output_5 = [
+        another_scope.refs.a.innerText,
+        another_scope.refs.b.innerText,
+    ].join(" ");
     t.is(output_5, "a/2 b/2");
 
-    const foo_element = /** @type {HTMLElement} */ ( /** @type {unknown} */ (document.getElementById("foo")));
+    const foo_element = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.getElementById("foo"))
+    );
     t.true(scope.root.contains(foo_element));
     t.false(scope.contains(foo_element));
     t.true(another_scope.contains(foo_element));
     window.close();
 });
 
-test("DomScope (scopes)", t => {
-    const window = new Window({ url: 'https://localhost:8080' });
+test("DomScope (scopes)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-    
-    body.innerHTML = /* html*/`
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
+
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     
@@ -125,21 +142,25 @@ test("DomScope (scopes)", t => {
     </div>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
     let scopes = scope.scopes;
-    let output_1 = Object.entries(scopes).map(item => item[0]).join(",");
+    let output_1 = Object.entries(scopes)
+        .map((item) => item[0])
+        .join(",");
 
     t.is(output_1, "my-scope-1,my-scope-2");
 
     window.close();
 });
 
-test("DomScope (querySelector)", t => {
-const window = new Window({ url: 'https://localhost:8080' });
-const document = window.document;
-const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+test("DomScope (querySelector)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
 <span ref="a">a</span>
 <span ref="b">b</span>
 
@@ -166,7 +187,7 @@ body.innerHTML = /* html*/`
 </div>
 `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     t.false(!!scope.querySelector("foo"));
     t.true(!!scope.querySelector("#my-block"));
@@ -174,12 +195,14 @@ body.innerHTML = /* html*/`
     window.close();
 });
 
-test("DomScope (querySelectorAll)", t => {
-    const window = new Window({ url: 'https://localhost:8080' });
+test("DomScope (querySelectorAll)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-    
-    body.innerHTML = /* html*/`
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
+
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     
@@ -206,7 +229,7 @@ test("DomScope (querySelectorAll)", t => {
     </div>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     t.is(scope.querySelectorAll("foo").length, 0);
     t.is(scope.querySelectorAll("#my-block").length, 1);
@@ -214,12 +237,14 @@ test("DomScope (querySelectorAll)", t => {
     window.close();
 });
 
-test("DomScope (walk)", t => {
-const window = new Window({ url: 'https://localhost:8080' });
-const document = window.document;
-const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+test("DomScope (walk)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
 <span ref="a">a</span>
 <span ref="b">b</span>
 
@@ -258,25 +283,26 @@ body.innerHTML = /* html*/`
         t.log(outputElementInfo(element));
     }
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
     scope.walk(callback);
 
     if (foo == 4) {
         t.pass();
-    }
-    else {
+    } else {
         t.fail();
     }
 
     window.close();
 });
 
-test("DomScope (destroy)", t => {
-    const window = new Window({ url: 'https://localhost:8080' });
+test("DomScope (destroy)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-    
-    body.innerHTML = /* html*/`
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
+
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     
@@ -303,9 +329,9 @@ test("DomScope (destroy)", t => {
     </div>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
-    let output_1 = (scope.querySelectorAll("#my-block").length).toString();
+    let output_1 = scope.querySelectorAll("#my-block").length.toString();
     if (output_1 != "1") t.fail(output_1);
 
     t.false(scope.isDestroyed);
@@ -339,12 +365,14 @@ test("DomScope (destroy)", t => {
     window.close();
 });
 
-test("DomScope (dublicate ref and scopes)", t => {
-const window = new Window({ url: 'https://localhost:8080' });
-const document = window.document;
-const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+test("DomScope (dublicate ref and scopes)", (t) => {
+    const window = new Window({ url: "https://localhost:8080" });
+    const document = window.document;
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
 <span ref="a">a</span>
 <span ref="b">b</span>
 
@@ -372,17 +400,20 @@ body.innerHTML = /* html*/`
 `;
 
     /** @type {DomScope<{a: HTMLSpanElement}>} */
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
-    body.insertAdjacentHTML("beforeend", /* html */`
+    body.insertAdjacentHTML(
+        "beforeend",
+        /* html */ `
         <span ref="a" dublicated></span>
         <div scope-ref="my-scope-1" dublicated>
         </div>
-    `);
+    `
+    );
 
     let refs = scope.refs;
     let scopes = scope.scopes;
-    
+
     if (refs.a.hasAttribute("dublicate")) {
         t.fail();
         return;
@@ -398,13 +429,14 @@ body.innerHTML = /* html*/`
     window.close();
 });
 
-test("DomScope (custom scopes)", t => {
-
-    const window = new Window({ url: 'https://localhost:8081' });
+test("DomScope (custom scopes)", (t) => {
+    const window = new Window({ url: "https://localhost:8081" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-    body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
 
@@ -419,7 +451,7 @@ test("DomScope (custom scopes)", t => {
     </div>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     scope.config.is_scope_element = function (element) {
         if (element.tagName == "SLOT") {
@@ -431,7 +463,7 @@ test("DomScope (custom scopes)", t => {
         }
 
         return false;
-    }
+    };
 
     if (!scope.scopes["custom_scope_name"]) {
         t.fail("custom_scope_name not found");
@@ -444,18 +476,19 @@ test("DomScope (custom scopes)", t => {
     if (!scope_1.scopes["slot2"]) {
         t.fail("custom_scope_name.slot2 not found");
     }
-    
+
     t.pass();
     window.close();
 });
 
-test("DomScope (isScopeElement)", t => {
-
-    const window = new Window({ url: 'https://localhost:8081' });
+test("DomScope (isScopeElement)", (t) => {
+    const window = new Window({ url: "https://localhost:8081" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-    body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     
@@ -465,10 +498,12 @@ test("DomScope (isScopeElement)", t => {
     </div>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     let is_scope_1 = scope.isScopeElement(body);
-    let scope_element = /** @type {HTMLElement} */ (body.querySelector(`[scope-ref="my-scope-1"]`));
+    let scope_element = /** @type {HTMLElement} */ (
+        body.querySelector(`[scope-ref="my-scope-1"]`)
+    );
     let is_scope_2 = scope.isScopeElement(scope_element);
 
     t.is(is_scope_1, false);
@@ -477,14 +512,14 @@ test("DomScope (isScopeElement)", t => {
     window.close();
 });
 
-
-test("DomScope (unnamed scopes)", t => {
-
-    const window = new Window({ url: 'https://localhost:8081' });
+test("DomScope (unnamed scopes)", (t) => {
+    const window = new Window({ url: "https://localhost:8081" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-    body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     
@@ -510,10 +545,10 @@ test("DomScope (unnamed scopes)", t => {
 
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     let scope_names = Object.keys(scope.scopes);
-    
+
     t.is(scope_names.length, 4);
 
     t.deepEqual(scope_names.sort(), ["my-scope-1", "$0", "$1", "$2"].sort());
@@ -521,26 +556,27 @@ test("DomScope (unnamed scopes)", t => {
     window.close();
 });
 
-test("DomScope (checkRefs)", t => {
-
-    const window = new Window({ url: 'https://localhost:8081' });
+test("DomScope (checkRefs)", (t) => {
+    const window = new Window({ url: "https://localhost:8081" });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
+    const body = /** @type {HTMLElement} */ (
+        /** @type {unknown} */ (document.body)
+    );
 
-    body.innerHTML = /* html*/`
+    body.innerHTML = /* html*/ `
     <span ref="a">a</span>
     <span ref="b">b</span>
     `;
 
-    let scope = new DomScope(body, {window: window});
+    let scope = new DomScope(body, { window: window });
 
     t.notThrows(() => {
         scope.checkRefs({
             // @ts-ignore
-            a:window.HTMLSpanElement.prototype,
+            a: window.HTMLSpanElement.prototype,
             // @ts-ignore
             b: window.HTMLSpanElement.prototype,
-        });           
+        });
     });
 
     t.throws(() => {
@@ -549,7 +585,7 @@ test("DomScope (checkRefs)", t => {
             a: window.HTMLDivElement.prototype,
             // @ts-ignore
             b: window.HTMLSpanElement.prototype,
-        });           
+        });
     });
 
     t.throws(() => {
@@ -559,8 +595,8 @@ test("DomScope (checkRefs)", t => {
             // @ts-ignore
             b: window.HTMLSpanElement.prototype,
             // @ts-ignore
-            c: window.HTMLSpanElement.prototype
-        });        
+            c: window.HTMLSpanElement.prototype,
+        });
     });
     window.close();
 });

@@ -1,6 +1,6 @@
 // @ts-check
 
-
+import { getConfig } from "./tools.js";
 
 /**
  * Converts an HTML string to an DocumentFragment.
@@ -11,20 +11,16 @@
  * @throws {Error} - If no element or multiple elements are found in the HTML string
  */
 export function createFromHTML(html, options) {
-
-    if (typeof html !== 'string') {
-        throw new Error('html must be a string');
+    if (typeof html !== "string") {
+        throw new Error("html must be a string");
     }
 
-    let wnd = options?.window || globalThis.window;
-
-    if (!wnd) {
-        throw new Error('window is not defined');
-    }
+    const config = getConfig(options);
+    let wnd = config.window;
 
     const doc = /** @type {Document} */ (wnd.document);
 
-    const template = doc.createElement('template');
+    const template = doc.createElement("template");
     template.innerHTML = html;
     return template.content;
 }
