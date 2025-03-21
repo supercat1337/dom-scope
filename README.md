@@ -6,18 +6,18 @@ dom-scope is a tiny javascript library that allows you to create scopes inside t
 
 ## What are scopes inside the DOM for?
 
-When working with a large HTML document, it's often necessary to get references to specific DOM elements. 
+When working with a large HTML document, it's often necessary to get references to specific DOM elements.
 
 This can be done by using identifiers in the attributes of the necessary elements. However, there is a risk that the document may contain multiple elements with the same identifier. To avoid confusion, this library was created to help developers create scopes inside the DOM. A scope is an isolated area of the DOM that contains unique identifiers for its elements. Scopes can be nested, allowing you to create a hierarchical structure of unique identifiers. This makes it easier to access specific elements in the DOM.
 
 This library provides a simple way to create scopes inside the DOM and get references to the elements in the scope.
 
-### Example 
+### Example
 
 ```js
 import { createFromHTML, selectRefs } from "dom-scope";
 
-const root = createFromHTML(/*html*/`
+const root = createFromHTML(/*html*/ `
     <span ref="a">1</span>
     <span ref="b">1</span>
 
@@ -31,24 +31,23 @@ const root = createFromHTML(/*html*/`
 `);
 
 const wrong_annotation = {
-    "a": HTMLElement,
-    "b": HTMLDivElement,
-    "c": HTMLSpanElement
+    a: HTMLElement,
+    b: HTMLDivElement,
+    c: HTMLSpanElement,
 };
 
 try {
     // select refs and check if they are correct
     let refs = selectRefs(root, wrong_annotation);
-}
-catch (e) {
+} catch (e) {
     console.log(e.message);
     // occures: The ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
 }
 
 const annotation = {
-    "a": HTMLSpanElement,
-    "b": HTMLSpanElement,
-    "c": HTMLSpanElement
+    a: HTMLSpanElement,
+    b: HTMLSpanElement,
+    c: HTMLSpanElement,
 };
 
 let refs = selectRefs(root, annotation);
@@ -68,12 +67,12 @@ Consequently, the reference `c` targets an element with the text "1", excluding 
 
 ### Advantages
 
-- type checking for the refs in static analysis and runtime
-- autocompletion for the refs
-- simple and easy to use
-- avoids naming conflicts
-- allows nested scopes
-- avoids the need for complex CSS selectors
+-   type checking for the refs in static analysis and runtime
+-   autocompletion for the refs
+-   simple and easy to use
+-   avoids naming conflicts
+-   allows nested scopes
+-   avoids the need for complex CSS selectors
 
 ## Advanced Usage
 
@@ -88,7 +87,7 @@ Alternatively, you can use the `DomScope` class to create scopes inside the DOM 
 
     <div scope-ref="my-scope-1">
         <div ref="a">a</div>
-        <div ref="b">b</div>       
+        <div ref="b">b</div>
         <div ref="c">c</div>
     </div>
 </body>
@@ -103,7 +102,7 @@ console.log(refs.a instanceof HTMLSpanElement); // true
 console.log(refs.b instanceof HTMLSpanElement); // true
 
 let scope = domScope.scopes["my-scope-1"];
-const {a, b, c} = scope.refs;
+const { a, b, c } = scope.refs;
 console.log(a instanceof HTMLDivElement); // true
 console.log(b instanceof HTMLDivElement); // true
 console.log(c instanceof HTMLDivElement); // true
@@ -123,19 +122,21 @@ const refs = domScope.refs;
 // throws error if the required refs are not correct
 domScope.checkRefs({
     a: HTMLSpanElement,
-    b: HTMLSpanElement
+    b: HTMLSpanElement,
 });
 
 // another way to get typed scope is to use annotation object and then call checkRefs on it
 const annotation = {
     a: HTMLDivElement,
     b: HTMLDivElement,
-    c: HTMLDivElement
+    c: HTMLDivElement,
 };
 
-let scope = /** @type {DomScope<typeof annotation>} */ (domScope.scopes["my-scope-1"]);
+let scope = /** @type {DomScope<typeof annotation>} */ (
+    domScope.scopes["my-scope-1"]
+);
 // now refs are typed
-const { a, b, c} = scope.refs;
+const { a, b, c } = scope.refs;
 
 // throws error if the required refs are not correct
 scope.checkRefs(annotation);
@@ -186,13 +187,17 @@ domScope.config.is_scope_element = function (element) {
     }
 
     return false;
-}
+};
 
-const {a, b} = domScope.refs;
+const { a, b } = domScope.refs;
 
 let scope = domScope.scopes["custom_scope_name"];
-const {c} = scope.refs;
+const { c } = scope.refs;
 ```
+
+## Data attributes
+
+Dom-scope also supports using data attributes instead of custom attributes. To enable this feature, you can call the `useDataAttributes` function. This way you can use dom-scope in a context where custom attributes are not allowed.
 
 ## Installation
 
