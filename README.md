@@ -479,12 +479,3 @@ DomScope is optimized for large DOM trees:
 
 MIT License. 
 
----
-
-## Additional Resources
-
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [Usage Examples](https://github.com/yourusername/dom-scope/examples)
-- [Report an Issue](https://github.com/yourusername/dom-scope/issues)
-- [Contribute](https://github.com/yourusername/dom-scope/pulls)
-
