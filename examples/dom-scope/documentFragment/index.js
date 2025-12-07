@@ -4,7 +4,7 @@ import { DomScope } from "../../../dist/dom-scope.esm.js";
 //import { DomScope } from "dom-scope";
 
 /**
- * @param {DomScope} scope 
+ * @param {DomScope<any>} scope 
  */
 function showRefsText(scope) {
     let { a, b } = scope.refs;

@@ -26,15 +26,15 @@ scope.checkRefs(annotation2);
 scope.refs.a.innerText = "a";
 scope.refs.b.innerText = "b";
 
-console.log(scope.refs.a.innerText, scope.refs.b.innerText);
+//console.log(scope.refs.a.innerText, scope.refs.b.innerText);
 // outputs: a b
-console.log(scope.scopes);
+//console.log(scope.scopes);
 // outputs: {"my-scope-1": DomScope, "my-scope-2": DomScope}
-console.log(scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText);
+//console.log(scope.scopes["my-scope-2"].refs.a.innerText, scope.scopes["my-scope-2"].refs.b.innerText);
 // outputs: a/2 b/2
 
 // @ts-ignore
-console.log(scope.scopes["my-scope-2"].root.getAttribute("id"));
+//console.log(scope.scopes["my-scope-2"].root.getAttribute("id"));
 // outputs: my-block
 
 

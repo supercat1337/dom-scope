@@ -13,22 +13,14 @@ export type Refs<T extends RefsAnnotation = { [key: string]: HTMLElement }> = {
     [P in keyof T]: T[P] extends HTMLElementConstructor ? T[P]["prototype"] : T[P] extends HTMLElement ? T[P] : HTMLElement;
 };
 
-export type TypeIsScopeElement = (element: Element | HTMLElement, options: ScopeConfig) => string | null | false;
+export type TypeIsScopeElement = (element: Element | HTMLElement, options: ScopeConfig) => string | null;
 export type ScopeOptions = {
     ref_attr_name?: string;
     scope_ref_attr_name?: string;
     window?: any;
-    is_scope_element?: TypeIsScopeElement;
-    include_root?: boolean;
+    isScopeElement?: TypeIsScopeElement | null;
+    includeRoot?: boolean;
     scope_auto_name_prefix?: string;
-};
-export type ScopeConfig = {
-    ref_attr_name: string;
-    scope_ref_attr_name: string;
-    window: any;
-    is_scope_element: TypeIsScopeElement | undefined;
-    include_root: boolean;
-    scope_auto_name_prefix: string;
 };
 export type SelectRefsCallback = (currentElement: HTMLElement) => void;
 export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
@@ -53,16 +45,16 @@ export class DomScope<T extends RefsAnnotation> {
      */
     get root(): RootType;
     /**
-     * Returns the object containing html elements with ref attribute
+     * Returns the object containing html elements with data-ref attribute
      * @type {Refs<T>}
      * */
     get refs(): Refs<T>;
     /**
      * Returns the object containing children DomScopes
-     * @type {{[key:string]:DomScope}}
+     * @type {{[key:string]:DomScope<T>}}
      * */
     get scopes(): {
-        [key: string]: DomScope<any>;
+        [key: string]: DomScope<T>;
     };
     /**
      * Updates refs and scopes objects
@@ -153,7 +145,7 @@ export function createFromHTML(html: string, options?: {
  */
 export function generateId(custom_prefix?: string): string;
 /**
- * Returns an object of child elements containing the ref attribute
+ * Returns an object of child elements containing the data-ref attribute
  * @template {RefsAnnotation} T
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {T|null} [annotation] - An object specifying the expected types for each reference.
@@ -162,7 +154,7 @@ export function generateId(custom_prefix?: string): string;
  */
 export function selectRefs<T extends RefsAnnotation>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, annotation?: T | null, options?: ScopeOptions): Refs<T>;
 /**
- * Returns an object of child elements containing the ref attribute and an object of child elements containing the scope-ref attribute
+ * Returns an object of child elements containing the data-ref attribute and an object of child elements containing the data-scope attribute
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
  * @param {SelectRefsCallback|null} [custom_callback]
  * @param {ScopeOptions} [options]
@@ -178,15 +170,9 @@ export function selectRefsExtended(root_element: Element | HTMLElement | Documen
 };
 /**
  * Sets default options for DomScope
- * @param {ScopeOptions} options
+ * @param {ScopeOptions} [options]
  */
-export function setDomScopeOptions(options: ScopeOptions): void;
-/**
- * Changes the default attribute names to use data attributes instead of custom attributes. This way you can use DomScope in a context where custom attributes are not allowed.
- * @param {boolean} [enabled=true] Set to false to disable using data attributes.
- * @returns {void}
- */
-export function useDataAttributes(enabled?: boolean): void;
+export function setDefaultConfig(options?: ScopeOptions): ScopeConfig;
 /**
  * Walks the DOM tree of the scope and calls the callback for each element
  * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
@@ -194,3 +180,33 @@ export function useDataAttributes(enabled?: boolean): void;
  * @param {ScopeOptions} [options] the attribute name contains a name of a scope
  */
 export function walkDomScope(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: ScopeOptions): void;
+/**
+ * @typedef {import("./types.d.ts").RefsAnnotation} RefsAnnotation
+ */
+/**
+ * @template {RefsAnnotation} T
+ * @typedef {import("./types.d.ts").Refs<T>} Refs<T>
+ */
+/**
+ * @typedef {(element:Element|HTMLElement, options:ScopeConfig)=>string|null} TypeIsScopeElement
+ * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string, window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
+ */
+/**
+ * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
+ */
+declare class ScopeConfig {
+    /** @type {string} */
+    ref_attr_name: string;
+    /** @type {string} */
+    scope_ref_attr_name: string;
+    /** @type {*} */
+    window: any;
+    /** @type {TypeIsScopeElement|null} */
+    isScopeElement: TypeIsScopeElement | null;
+    /** @type {boolean} */
+    includeRoot: boolean;
+    /** @type {string} */
+    scope_auto_name_prefix: string;
+    toString(): string;
+}
+export {};

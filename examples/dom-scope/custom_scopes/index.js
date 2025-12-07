@@ -5,7 +5,12 @@ import { DomScope } from "../../../dist/dom-scope.esm.js";
 
 let scope = new DomScope(document.body);
 
-scope.config.is_scope_element = function (element) {
+/**
+ * Checks if the element is a scope element
+ * @param {Element} element - element to check
+ * @returns {string|null} - name of the scope or false if not a scope element
+ */
+scope.config.isScopeElement = function (element) {
     if (element.tagName == "SLOT") {
         return element.getAttribute("name") || "";
     }
@@ -14,7 +19,7 @@ scope.config.is_scope_element = function (element) {
         return element.getAttribute("custom-scope-attribute");
     }
 
-    return false;
+    return null;
 }
 
 if (!scope.scopes["custom_scope_name"]) {

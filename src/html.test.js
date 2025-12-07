@@ -1,25 +1,23 @@
 // @ts-check
 
-import { selectRefs, createFromHTML } from "./../src/index.js";
-import test from "ava";
-import { Window } from "happy-dom";
+import { selectRefs, createFromHTML } from './../src/index.js';
+import test from 'ava';
+import { Window } from 'happy-dom';
 
-test("createFromHTML", (t) => {
-    const window = new Window({ url: "https://localhost:8080" });
+test('createFromHTML', t => {
+    const window = new Window({ url: 'https://localhost:8080' });
     const document = window.document;
-    const body = /** @type {HTMLElement} */ (
-        /** @type {unknown} */ (document.body)
-    );
+    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
     let element = createFromHTML(
         /*html*/ `
 <div>
-    <span ref="a">a</span>
-    <span ref="b">b</span>
+    <span data-ref="a">a</span>
+    <span data-ref="b">b</span>
 
-    <div scope-ref="my-scope-1">
-        <span ref="a">a/1</span>
-        <span ref="b">b/1</span>
+    <div data-scope="my-scope-1">
+        <span data-ref="a">a/1</span>
+        <span data-ref="b">b/1</span>
     </div>
 </div>
     `,
@@ -28,19 +26,19 @@ test("createFromHTML", (t) => {
 
     let refs = selectRefs(element, null, {
         window: window,
-        include_root: false,
+        includeRoot: false,
     });
 
     t.deepEqual(refs, {
-        a: element.querySelector('[ref="a"]'),
-        b: element.querySelector('[ref="b"]'),
+        a: element.querySelector('[data-ref="a"]'),
+        b: element.querySelector('[data-ref="b"]'),
     });
 
     body.appendChild(element);
 
     let refs_body = selectRefs(body, null, {
         window: window,
-        include_root: false,
+        includeRoot: false,
     });
 
     t.deepEqual(refs, refs_body);
@@ -48,8 +46,8 @@ test("createFromHTML", (t) => {
     window.close();
 });
 
-test("createFromHTML errors", (t) => {
-    const window = new Window({ url: "https://localhost:8080" });
+test('createFromHTML errors', t => {
+    const window = new Window({ url: 'https://localhost:8080' });
 
     t.throws(() => {
         // no string
@@ -60,17 +58,3 @@ test("createFromHTML errors", (t) => {
     window.close();
 });
 
-test("createFromHTML (no window)", (t) => {
-    t.throws(() => {
-        // no window
-        createFromHTML(/*html*/ `
-            <span ref="a">a</span>
-            <span ref="b">b</span>
-        
-            <div scope-ref="my-scope-1">
-                <span ref="a">a/1</span>
-                <span ref="b">b/1</span>
-            </div>
-            `);
-    });
-});

@@ -3,16 +3,16 @@
 import { createFromHTML, selectRefs } from "../../dist/dom-scope.esm.js";
 
 const root = createFromHTML(/*html*/`
-    <span ref="a">1</span>
-    <span ref="b">1</span>
+    <span data-ref="a">1</span>
+    <span data-ref="b">1</span>
 
-    <div scope-ref="another_scope">
-        <span ref="a">2</span>
-        <span ref="b">2</span>
-        <span ref="c">2</span>
+    <div data-scope="another_scope">
+        <span data-ref="a">2</span>
+        <span data-ref="b">2</span>
+        <span data-ref="c">2</span>
     </div>
 
-    <span ref="c">1</span>
+    <span data-ref="c">1</span>
 `);
 
 const wrong_annotation = {
@@ -26,8 +26,9 @@ try {
     let refs = selectRefs(root, wrong_annotation);
 }
 catch (e) {
+    if (!(e instanceof Error)) throw e;
     console.log(e.message);
-    // occures: The ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
+    // occures: The data-ref "b" must be an instance of HTMLDivElement (actual: HTMLSpanElement)
 }
 
 const annotation = {

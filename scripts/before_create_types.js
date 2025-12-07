@@ -15,7 +15,7 @@ const esmFile = path.join(distDir, "dom-scope.esm.js");
 const fileContent = fs.readFileSync(esmFile, "utf8");
 
 const fixedContent = fileContent
-    .replaceAll('import("./tools.js").', "")
+    .replaceAll('import("./config.js").', "")
     
 fs.writeFileSync(esmFile, fixedContent);
 

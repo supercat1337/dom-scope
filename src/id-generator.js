@@ -1,5 +1,7 @@
 // @ts-check
 
+import { getDefaultConfig } from './config.js';
+
 let id = 0;
 
 /** @type {Map<string, number>} */
@@ -14,20 +16,18 @@ let id_map = new Map();
  * @returns {string} The generated id.
  */
 export function generateId(custom_prefix) {
-
-    if (typeof custom_prefix === "string") {
-        let id = 0;
-
-        if (id_map.has(custom_prefix)) {
-            let current_id = id_map.get(custom_prefix) || 0;
-            id = current_id + 1;
-        } 
-        
-        id_map.set(custom_prefix, id);
-        return `${custom_prefix}_${id}`;
+    if (!custom_prefix) {
+        let config = getDefaultConfig();
+        custom_prefix = config.scope_auto_name_prefix;
     }
 
-    let name = `id_${id}`;
-    id++;
-    return name;
+    let id = 0;
+
+    if (id_map.has(custom_prefix)) {
+        let current_id = id_map.get(custom_prefix) || 0;
+        id = current_id + 1;
+    }
+
+    id_map.set(custom_prefix, id);
+    return `${custom_prefix}-${id}`;
 }

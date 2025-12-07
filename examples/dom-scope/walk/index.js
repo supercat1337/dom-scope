@@ -17,10 +17,10 @@ scope.walk((element)=>{
 });
 /*
 outputs:
-SPAN ref=a
-SPAN ref=b
-DIV scope-ref=my-scope-1
-DIV scope-ref=my-scope-2 id=my-block
+SPAN data-ref=a
+SPAN data-ref=b
+DIV data-scope=my-scope-1
+DIV data-scope=my-scope-2 id=my-block
 SCRIPT src=index.js type=module
 */
 
@@ -32,9 +32,9 @@ another_scope.walk((element)=>{
 });
 /*
 outputs:
-SPAN ref=a
-SPAN ref=b
+SPAN data-ref=a
+SPAN data-ref=b
 SPAN id=foo
-DIV scope-ref=my-scope
-DIV scope-ref=my-scope-2
+DIV data-scope=my-scope
+DIV data-scope=my-scope-2
 */

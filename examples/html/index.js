@@ -3,9 +3,9 @@
 import { createFromHTML, selectRefs } from "../../dist/dom-scope.esm.js";
 
 let element = createFromHTML(/*html*/`
-    <button ref="minus"> - </button>
-    <span ref="count">0</span>
-    <button ref="plus"> + </button>
+    <button data-ref="minus"> - </button>
+    <span data-ref="count">0</span>
+    <button data-ref="plus"> + </button>
 `);
 
 const annotation = {

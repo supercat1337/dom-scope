@@ -15,16 +15,16 @@
 </head>
 
 <body>
-    <span ref="a">a</span>
-    <span ref="b">b</span>
+    <span data-ref="a">a</span>
+    <span data-ref="b">b</span>
 
     <div custom-scope-attribute="custom_scope_name">
-        <span ref="a">a in custom_scope_name</span>
+        <span data-ref="a">a in custom_scope_name</span>
         <slot>
-            <span ref="a">slot</span>
+            <span data-ref="a">slot</span>
         </slot>
-        <slot name="slot2" ref="slot2">
-            <span ref="a">a slot2</span>
+        <slot name="slot2" data-ref="slot2">
+            <span data-ref="a">a slot2</span>
         </slot>
     </div>
 
