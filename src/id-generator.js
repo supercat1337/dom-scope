@@ -2,8 +2,6 @@
 
 import { getDefaultConfig } from './config.js';
 
-let id = 0;
-
 /** @type {Map<string, number>} */
 let id_map = new Map();
 
