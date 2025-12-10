@@ -45,13 +45,6 @@ export class ScopeConfig {
         this.scope_auto_name_prefix = SCOPE_AUTO_NAME_PREFIX;
     }
 
-    toString() {
-        return `ScopeConfig(ref_attr_name=${this.ref_attr_name}, scope_ref_attr_name=${
-            this.scope_ref_attr_name
-        }, includeRoot=${this.includeRoot}, scope_auto_name_prefix=${
-            this.scope_auto_name_prefix
-        }, window=${this.window ? 'defined' : 'undefined'}, isScopeElement=${this.isScopeElement})`;
-    }
 }
 
 /** @type {ScopeConfig} */

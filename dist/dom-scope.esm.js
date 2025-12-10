@@ -45,13 +45,6 @@ class ScopeConfig {
         this.scope_auto_name_prefix = SCOPE_AUTO_NAME_PREFIX;
     }
 
-    toString() {
-        return `ScopeConfig(ref_attr_name=${this.ref_attr_name}, scope_ref_attr_name=${
-            this.scope_ref_attr_name
-        }, includeRoot=${this.includeRoot}, scope_auto_name_prefix=${
-            this.scope_auto_name_prefix
-        }, window=${this.window ? 'defined' : 'undefined'}, isScopeElement=${this.isScopeElement})`;
-    }
 }
 
 /** @type {ScopeConfig} */
@@ -79,17 +72,6 @@ function isScopeElement(element, config) {
     if (value === null) return null;
 
     return value;
-}
-
-/**
- * Returns a configuration object for the scope.
- *
- * @returns {ScopeConfig} The configuration object.
- * @throws {Error} If 'checkWindow' is true and 'window' is not defined.
- */
-function getDefaultConfig() {
-    /** @type {ScopeConfig} */
-    return defaultConfig;
 }
 
 /**
@@ -616,7 +598,6 @@ function createFromHTML(html, options) {
 
 // @ts-check
 
-
 /** @type {Map<string, number>} */
 let id_map = new Map();
 
@@ -628,12 +609,7 @@ let id_map = new Map();
  * @param {string} [custom_prefix] The custom prefix to use when generating the id.
  * @returns {string} The generated id.
  */
-function generateId(custom_prefix) {
-    if (!custom_prefix) {
-        let config = getDefaultConfig();
-        custom_prefix = config.scope_auto_name_prefix;
-    }
-
+function generateId(custom_prefix = 'id') {
     let id = 0;
 
     if (id_map.has(custom_prefix)) {

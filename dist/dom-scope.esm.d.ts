@@ -207,6 +207,5 @@ declare class ScopeConfig {
     includeRoot: boolean;
     /** @type {string} */
     scope_auto_name_prefix: string;
-    toString(): string;
 }
 export {};
