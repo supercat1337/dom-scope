@@ -15,7 +15,7 @@ const REF_ATTR_NAME = 'data-ref';
 
 /**
  * @typedef {(element:Element|HTMLElement, options:ScopeConfig)=>string|null} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string, window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
+ * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string|string[], window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
  */
 
 /**
@@ -25,7 +25,7 @@ const REF_ATTR_NAME = 'data-ref';
 export class ScopeConfig {
     /** @type {string} */
     ref_attr_name;
-    /** @type {string} */
+    /** @type {string|string[]} */
     scope_ref_attr_name;
     /** @type {*} */
     window;
@@ -44,7 +44,6 @@ export class ScopeConfig {
         this.includeRoot = false;
         this.scope_auto_name_prefix = SCOPE_AUTO_NAME_PREFIX;
     }
-
 }
 
 /** @type {ScopeConfig} */
@@ -60,13 +59,20 @@ export function isScopeElement(element, config) {
     var value = null;
 
     if (!config) config = defaultConfig;
-    let scope_ref_attr_name = config.scope_ref_attr_name || SCOPE_ATTR_NAME;
+    let scope_ref_attr_name = config.scope_ref_attr_name || [SCOPE_ATTR_NAME];
     let isScopeElementFunc = config.isScopeElement;
 
     if (isScopeElementFunc) {
         value = isScopeElementFunc(element, config);
     } else {
-        value = element.getAttribute(scope_ref_attr_name);
+        if (Array.isArray(scope_ref_attr_name)) {
+            for (let i = 0; i < scope_ref_attr_name.length; i++) {
+                value = element.getAttribute(scope_ref_attr_name[i]);
+                if (value !== null) break;
+            }
+        } else {
+            value = element.getAttribute(scope_ref_attr_name);
+        }
     }
 
     if (value === null) return null;
@@ -93,22 +99,38 @@ export function getDefaultConfig() {
 export function createCustomConfig(options = {}) {
     let config = new ScopeConfig();
 
-    config.includeRoot = options.hasOwnProperty('includeRoot') && typeof options.includeRoot !== 'undefined'
-        ? options.includeRoot
-        : defaultConfig.includeRoot;
-    config.scope_auto_name_prefix = options.hasOwnProperty('scope_auto_name_prefix') && typeof options.scope_auto_name_prefix === 'string'
-        ? options.scope_auto_name_prefix
-        : defaultConfig.scope_auto_name_prefix;
-    config.isScopeElement = options.hasOwnProperty('isScopeElement') && typeof options.isScopeElement !== 'undefined'
-        ? options.isScopeElement
-        : defaultConfig.isScopeElement;
-    config.ref_attr_name = options.hasOwnProperty('ref_attr_name') && typeof options.ref_attr_name === 'string'
-        ? options.ref_attr_name
-        : defaultConfig.ref_attr_name;
-    config.window = options.hasOwnProperty('window') && typeof options.window !== 'undefined' ? options.window : defaultConfig.window;
-    config.scope_ref_attr_name = options.hasOwnProperty('scope_ref_attr_name') && typeof options.scope_ref_attr_name === 'string'
-        ? options.scope_ref_attr_name
-        : defaultConfig.scope_ref_attr_name;
+    config.includeRoot =
+        options.hasOwnProperty('includeRoot') && typeof options.includeRoot !== 'undefined'
+            ? options.includeRoot
+            : defaultConfig.includeRoot;
+    config.scope_auto_name_prefix =
+        options.hasOwnProperty('scope_auto_name_prefix') &&
+        typeof options.scope_auto_name_prefix === 'string'
+            ? options.scope_auto_name_prefix
+            : defaultConfig.scope_auto_name_prefix;
+    config.isScopeElement =
+        options.hasOwnProperty('isScopeElement') && typeof options.isScopeElement !== 'undefined'
+            ? options.isScopeElement
+            : defaultConfig.isScopeElement;
+    config.ref_attr_name =
+        options.hasOwnProperty('ref_attr_name') && typeof options.ref_attr_name === 'string'
+            ? options.ref_attr_name
+            : defaultConfig.ref_attr_name;
+    config.window =
+        options.hasOwnProperty('window') && typeof options.window !== 'undefined'
+            ? options.window
+            : defaultConfig.window;
+
+    if (options.hasOwnProperty('scope_ref_attr_name')) {
+        if (
+            typeof options.scope_ref_attr_name === 'string' ||
+            Array.isArray(options.scope_ref_attr_name)
+        ) {
+            config.scope_ref_attr_name = options.scope_ref_attr_name;
+        }
+    } else {
+        config.scope_ref_attr_name = defaultConfig.scope_ref_attr_name;
+    }
 
     return config;
 }
@@ -125,10 +147,21 @@ export function setDefaultConfig(options = {}) {
         defaultConfig.isScopeElement = options.isScopeElement || defaultConfig.isScopeElement;
     if (options.hasOwnProperty('includeRoot') && typeof options.includeRoot === 'boolean')
         defaultConfig.includeRoot = options.includeRoot;
-    if (options.hasOwnProperty('scope_auto_name_prefix') && typeof options.scope_auto_name_prefix === 'string')
+    if (
+        options.hasOwnProperty('scope_auto_name_prefix') &&
+        typeof options.scope_auto_name_prefix === 'string'
+    )
         defaultConfig.scope_auto_name_prefix = options.scope_auto_name_prefix;
-    if (options.hasOwnProperty('scope_ref_attr_name') && typeof options.scope_ref_attr_name === 'string')
-        defaultConfig.scope_ref_attr_name = options.scope_ref_attr_name;
+    if (options.hasOwnProperty('scope_ref_attr_name')) {
+        if (
+            typeof options.scope_ref_attr_name === 'string' ||
+            Array.isArray(options.scope_ref_attr_name)
+        ) {
+            defaultConfig.scope_ref_attr_name = options.scope_ref_attr_name;
+        }
+    } else {
+        defaultConfig.scope_ref_attr_name = defaultConfig.scope_ref_attr_name;
+    }
 
     return defaultConfig;
 }

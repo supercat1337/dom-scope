@@ -16,7 +16,7 @@ export type Refs<T extends RefsAnnotation = { [key: string]: HTMLElement }> = {
 export type TypeIsScopeElement = (element: Element | HTMLElement, options: ScopeConfig) => string | null;
 export type ScopeOptions = {
     ref_attr_name?: string;
-    scope_ref_attr_name?: string;
+    scope_ref_attr_name?: string | string[];
     window?: any;
     isScopeElement?: TypeIsScopeElement | null;
     includeRoot?: boolean;
@@ -189,7 +189,7 @@ export function walkDomScope(root_element: Element | HTMLElement | DocumentFragm
  */
 /**
  * @typedef {(element:Element|HTMLElement, options:ScopeConfig)=>string|null} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string, window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
+ * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string|string[], window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
  */
 /**
  * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
@@ -197,8 +197,8 @@ export function walkDomScope(root_element: Element | HTMLElement | DocumentFragm
 declare class ScopeConfig {
     /** @type {string} */
     ref_attr_name: string;
-    /** @type {string} */
-    scope_ref_attr_name: string;
+    /** @type {string|string[]} */
+    scope_ref_attr_name: string | string[];
     /** @type {*} */
     window: any;
     /** @type {TypeIsScopeElement|null} */
