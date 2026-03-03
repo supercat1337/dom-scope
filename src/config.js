@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS = {
     AUTO_PREFIX: 'unnamed-scope',
 };
 
-export class ScopeConfig {
+class ScopeConfig {
     /** @param {import("./types.js").ScopeOptions} [options] */
     constructor(options = {}) {
         this.refAttribute = options.refAttribute ?? DEFAULT_SETTINGS.REF_ATTR;
