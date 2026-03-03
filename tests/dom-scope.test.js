@@ -1,9 +1,9 @@
 // @ts-check
 
-import { DomScope } from './../src/index.js';
-import test from './../node_modules/ava/entrypoints/main.mjs';
+import { DomScope } from '../src/index.js';
+import test from 'ava';
 import { Window } from 'happy-dom';
-import { getDefaultConfig } from './config.js';
+import { getDefaults } from '../src/config.js';
 
 /**
  * @param {Element} element
@@ -87,10 +87,10 @@ test('DomScope (root, contains, refs)', t => {
     let another_scope = new DomScope(block_element, { window: window });
     another_scope.config.window = window;
 
-    let another_scope_refs = another_scope.refs;
+    let another_scopeRefs = another_scope.refs;
 
-    another_scope_refs.a.innerHTML = 'a/2';
-    another_scope_refs.b.innerHTML = 'b/2';
+    another_scopeRefs.a.innerHTML = 'a/2';
+    another_scopeRefs.b.innerHTML = 'b/2';
 
     let output_5 = [another_scope.refs.a.innerText, another_scope.refs.b.innerText].join(' ');
     t.is(output_5, 'a/2 b/2');
@@ -532,15 +532,15 @@ test('DomScope (unnamed scopes)', t => {
     let scope_names = Object.keys(scope.scopes);
 
     t.is(scope_names.length, 4);
-    let config = getDefaultConfig();
+    let config = getDefaults();
 
     t.deepEqual(
         scope_names.sort(),
         [
             'my-scope-1',
-            config.scope_auto_name_prefix + '0',
-            config.scope_auto_name_prefix + '1',
-            config.scope_auto_name_prefix + '2',
+            config.scopeAutoNamePrefix + '0',
+            config.scopeAutoNamePrefix + '1',
+            config.scopeAutoNamePrefix + '2',
         ].sort()
     );
 

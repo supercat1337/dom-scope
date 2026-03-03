@@ -1,28 +1,68 @@
 // @ts-check
-
+/** * Represents a constructor for HTML elements (e.g., HTMLButtonElement).
+ */
 interface HTMLElementConstructor extends Function {
     name: string;
     prototype: HTMLElement;
 }
 
+/** * A validation schema for mapping reference names to their expected types.
+ */
 export type RefsAnnotation = {
     [key: string]: HTMLElement | HTMLElementConstructor;
 }
 
+/** * Infers the instance type from the annotation.
+ * If an HTMLElementConstructor is provided, it returns the instance (prototype).
+ * Otherwise, it defaults to HTMLElement.
+ */
 export type Refs<T extends RefsAnnotation = { [key: string]: HTMLElement }> = {
     [P in keyof T]: T[P] extends HTMLElementConstructor ? T[P]["prototype"] : T[P] extends HTMLElement ? T[P] : HTMLElement;
 };
 
-export type TypeIsScopeElement = (element: Element | HTMLElement, options: ScopeConfig) => string | null;
-export type ScopeOptions = {
-    ref_attr_name?: string;
-    scope_ref_attr_name?: string | string[];
+/** * Valid root types for DOM traversal.
+ */
+export type ScopeRoot = Element | HTMLElement | DocumentFragment | ShadowRoot;
+export type ScopeRoots = ScopeRoot | ScopeRoot[];
+
+/** * Configuration options for DOM scope behavior.
+ */
+export interface ScopeOptions {
+    /** Attribute name for references (default: 'data-ref') */
+    refAttribute?: string;
+    /** Attribute(s) defining sub-scopes (default: 'data-scope') */
+    scopeAttribute?: string | string[];
+    /** Global window object for environment isolation */
     window?: any;
-    isScopeElement?: TypeIsScopeElement | null;
-    includeRoot?: boolean;
-    scope_auto_name_prefix?: string;
-};
-export type SelectRefsCallback = (currentElement: HTMLElement) => void;
+    /** * Custom logic to determine if an element is a scope.
+     * Added | null to match implementation defaults.
+     */
+    isScopeElement?: ((element: Element | HTMLElement, config: any) => string | null) | null;
+    /** Prefix for automatically named scopes (default: 'unnamed-scope') */
+    scopeAutoNamePrefix?: string;
+}
+
+/** * Internal configuration object used by the API.
+ */
+export interface ScopeConfig extends Required<Omit<ScopeOptions, 'isScopeElement' | 'window' | 'scopeAttribute'>> {
+    /** Global window object - always present in the processed config */
+    window: any;
+    /** Attribute(s) for scopes - normalized to string or array */
+    scopeAttribute: string | string[];
+    /** * Custom logic - strictly Type or null. 
+     * We explicitly remove 'undefined' here.
+     */
+    isScopeElement: ((element: Element | HTMLElement, config: any) => string | null) | null;
+}
+
+/** * Resulting structure for extended reference selection.
+ */
+export interface ExtendedResult {
+    refs: Record<string, HTMLElement>;
+    scopeRefs: Record<string, HTMLElement>;
+}
+
+export type IsScopeChecker = (element: Element | HTMLElement, config: ScopeConfig) => string | null;
 export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
 /**
  * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
@@ -33,179 +73,114 @@ export type RootType = Element | HTMLElement | DocumentFragment | ShadowRoot;
 export class DomScope<T extends RefsAnnotation> {
     /**
      * Creates an instance of DomScope.
-     * @param {RootType} root_element the root element
+     * @param {RootType} rootElement - The root element for this scope.
      * @param {ScopeOptions} [options]
      */
-    constructor(root_element: RootType, options?: ScopeOptions);
+    constructor(rootElement: RootType, options?: ScopeOptions);
     /** @type {ScopeConfig} */
     config: ScopeConfig;
-    /**
-     * Returns the root element
-     * @type {RootType}
-     */
+    /** @returns {RootType} */
     get root(): RootType;
-    /**
-     * Returns the object containing html elements with data-ref attribute
-     * @type {Refs<T>}
-     * */
+    /** @returns {Refs<T>} */
     get refs(): Refs<T>;
-    /**
-     * Returns the object containing children DomScopes
-     * @type {{[key:string]:DomScope<T>}}
-     * */
+    /** @returns {Object.<string, DomScope<any>>} */
     get scopes(): {
-        [key: string]: DomScope<T>;
+        [x: string]: DomScope<any>;
     };
     /**
-     * Updates refs and scopes objects
-     * @param {(currentElement:Element|HTMLElement)=>void} [callback]
+     * Updates refs and child scopes by re-scanning the DOM.
+     * @param {((el: HTMLElement) => void)} [callback]
      */
-    update(callback?: (currentElement: Element | HTMLElement) => void): void;
+    update(callback?: ((el: HTMLElement) => void)): void;
     /**
-     * Searches an element with css selector in current DomScope
+     * Finds the first element matching the selector within the current scope only.
      * @param {string} query
-     * @returns {null|Element}
+     * @returns {HTMLElement|null}
      */
-    querySelector(query: string): null | Element;
+    querySelector(query: string): HTMLElement | null;
     /**
-     * Searches elements with css selector in current DomScope
+     * Finds all elements matching the selector that belong to the current scope.
      * @param {string} query
      * @returns {HTMLElement[]}
      */
     querySelectorAll(query: string): HTMLElement[];
     /**
-     * Check if current DomScope constains the element
+     * Checks if an element belongs to this scope (not nested in child scopes).
      * @param {Node} element
-     * @param {boolean} [check_only_child_scopes=false]
-     * @returns {Boolean}
+     * @param {boolean} [checkOnlyChildScopes=false]
+     * @returns {boolean}
      */
-    contains(element: Node, check_only_child_scopes?: boolean): boolean;
+    contains(element: Node, checkOnlyChildScopes?: boolean): boolean;
     /**
-     * Walks through all elements in the scope
-     * @param {(currentElement:HTMLElement)=>void} callback
+     * Walks through all elements belonging to this scope.
+     * @param {(el: HTMLElement) => void} callback
      */
-    walk(callback: (currentElement: HTMLElement) => void): void;
+    walk(callback: (el: HTMLElement) => void): void;
     /**
-     * Destroys the instance
+     * Cleans up the instance and breaks references to DOM elements.
      */
     destroy(): void;
+    /** @returns {boolean} */
+    get isDestroyed(): boolean;
     /**
-     * Checks if element is scope
+     * Helper to check if an element is a scope according to current config.
      * @param {Element|HTMLElement} element
      * @returns {boolean}
      */
     isScopeElement(element: Element | HTMLElement): boolean;
     /**
-     * Checks if the instance was destroyed
-     * @returns {boolean} true if the instance was destroyed
-     */
-    get isDestroyed(): boolean;
-    /**
-     * Checks if all references in the scope are correct. If not, throws an error
-     * @param {RefsAnnotation} annotation Object with property names as keys and function constructors as values
-     * @example
-     * const scope = new DomScope(my_element);
-     * scope.checkRefs({
-     *     my_button: HTMLButtonElement,
-     *     my_input: HTMLInputElement
-     * });
+     * Validates refs against an annotation.
+     * @param {RefsAnnotation} annotation
      */
     checkRefs(annotation: RefsAnnotation): void;
     #private;
 }
 /**
- * Validates that all references in the provided `refs` object match the types specified in the `annotation` object.
- * Throws an error if any reference is missing or does not match the expected type.
- *
- * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
- * @param {RefsAnnotation} annotation - An object specifying the expected types for each reference.
- * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
+ * Validates that all references match the types specified in the annotation.
+ * @param {Object.<string, HTMLElement>} refs
+ * @param {RefsAnnotation} annotation
+ * @throws {Error} If validation fails.
  */
 export function checkRefs(refs: {
-    [key: string]: HTMLElement;
+    [x: string]: HTMLElement;
 }, annotation: RefsAnnotation): void;
 /**
- * Converts an HTML string to an DocumentFragment.
- *
- * @param {string} html - The HTML string
- * @param {{window?: *}} [options] - The options object
- * @returns {DocumentFragment} - The DocumentFragment created from the HTML string
- * @throws {Error} - If no element or multiple elements are found in the HTML string
- */
-export function createFromHTML(html: string, options?: {
-    window?: any;
-}): DocumentFragment;
-/**
- * Generates a unique id with an optional custom prefix. If a prefix is supplied, the
- * generated id will be of the form `<prefix>_<number>`. If no prefix is supplied, the
- * generated id will be of the form `id_<number>`. The generated id is guaranteed to be
- * unique per prefix.
- * @param {string} [custom_prefix] The custom prefix to use when generating the id.
- * @returns {string} The generated id.
- */
-export function generateId(custom_prefix?: string): string;
-/**
- * Returns an object of child elements containing the data-ref attribute
- * @template {RefsAnnotation} T
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {T|null} [annotation] - An object specifying the expected types for each reference.
+ * Selects elements marked with ref attributes within the roots.
+ * * @template {RefsAnnotation} T
+ * @param {ScopeRoots} roots
+ * @param {T|null} [annotation] - The schema to validate and type the refs
  * @param {ScopeOptions} [options]
  * @returns {Refs<T>}
  */
-export function selectRefs<T extends RefsAnnotation>(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, annotation?: T | null, options?: ScopeOptions): Refs<T>;
+export function selectRefs<T extends RefsAnnotation>(roots: ScopeRoots, annotation?: T | null, options?: ScopeOptions): Refs<T>;
 /**
- * Returns an object of child elements containing the data-ref attribute and an object of child elements containing the data-scope attribute
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {SelectRefsCallback|null} [custom_callback]
+ * Enhanced selectRefsExtended to support multiple roots.
+ * @param {ScopeRoots} roots
+ * @param {((el: HTMLElement) => void) | null} [customCallback]
  * @param {ScopeOptions} [options]
- * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
+ * @returns {ExtendedResult}
  */
-export function selectRefsExtended(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, custom_callback?: SelectRefsCallback | null, options?: ScopeOptions): {
-    refs: {
-        [key: string]: HTMLElement;
-    };
-    scope_refs: {
-        [key: string]: HTMLElement;
-    };
-};
+export function selectRefsExtended(roots: ScopeRoots, customCallback?: ((el: HTMLElement) => void) | null, options?: ScopeOptions): ExtendedResult;
 /**
- * Sets default options for DomScope
- * @param {ScopeOptions} [options]
+ * Updates global default settings.
+ * @param {ScopeOptions} options
+ * @returns {ScopeConfig}
  */
-export function setDefaultConfig(options?: ScopeOptions): ScopeConfig;
+export function setDefaults(options?: ScopeOptions): ScopeConfig;
 /**
- * Walks the DOM tree of the scope and calls the callback for each element
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {(currentElement:HTMLElement)=>void} callback
- * @param {ScopeOptions} [options] the attribute name contains a name of a scope
+ * Walks one or multiple DOM trees, skipping nested scopes.
+ * @param {ScopeRoots} roots - Single root or array of roots.
+ * @param {(el: HTMLElement) => void} callback
+ * @param {ScopeOptions | ScopeConfig} [options]
  */
-export function walkDomScope(root_element: Element | HTMLElement | DocumentFragment | ShadowRoot, callback: (currentElement: HTMLElement) => void, options?: ScopeOptions): void;
-/**
- * @typedef {import("./types.d.ts").RefsAnnotation} RefsAnnotation
- */
-/**
- * @template {RefsAnnotation} T
- * @typedef {import("./types.d.ts").Refs<T>} Refs<T>
- */
-/**
- * @typedef {(element:Element|HTMLElement, options:ScopeConfig)=>string|null} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string|string[], window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
- */
-/**
- * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
- */
+export function walkDomScope(roots: ScopeRoots, callback: (el: HTMLElement) => void, options?: ScopeOptions | ScopeConfig): void;
 declare class ScopeConfig {
-    /** @type {string} */
-    ref_attr_name: string;
-    /** @type {string|string[]} */
-    scope_ref_attr_name: string | string[];
-    /** @type {*} */
+    /** @param {ScopeOptions} [options] */
+    constructor(options?: ScopeOptions);
+    refAttribute: string;
+    scopeAttribute: string | string[];
     window: any;
-    /** @type {TypeIsScopeElement|null} */
-    isScopeElement: TypeIsScopeElement | null;
-    /** @type {boolean} */
-    includeRoot: boolean;
-    /** @type {string} */
-    scope_auto_name_prefix: string;
+    isScopeElement: (element: Element | HTMLElement, config: any) => string | null;
+    scopeAutoNamePrefix: string;
 }
 export {};

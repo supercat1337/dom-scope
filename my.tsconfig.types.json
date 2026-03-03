@@ -4,7 +4,7 @@
         "target": "ESNext",
         "module": "NodeNext",
         "emitDeclarationOnly": true,
-        "declaration": true, 
+        "declaration": true,
         "outDir": "./",
         "rootDir": ".",
         "declarationMap": false,
@@ -12,8 +12,6 @@
         "moduleResolution": "NodeNext",
         "stripInternal": false
     },
-    "include": [
-        "./index.js"
-    ],
+    "include": ["./dist/dom-scope.esm.js"],
     "exclude": []
 }

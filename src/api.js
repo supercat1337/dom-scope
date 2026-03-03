@@ -1,224 +1,152 @@
 // @ts-check
 
-import { createCustomConfig, getDefaultConfig, isScopeElement } from './config.js';
+import { createConfig, isScopeElement } from './config.js';
 
 /**
- * Returns an object of child elements containing the data-ref attribute and an object of child elements containing the data-scope attribute
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {import("./config.js").SelectRefsCallback|null} [custom_callback]
- * @param {import("./config.js").ScopeOptions} [options]
- * @returns { {refs: {[key:string]:HTMLElement}, scope_refs: {[key:string]:HTMLElement} } }
+ * Enhanced selectRefsExtended to support multiple roots.
+ * @param {import("./types.js").ScopeRoots} roots
+ * @param {((el: HTMLElement) => void) | null} [customCallback]
+ * @param {import("./types.js").ScopeOptions} [options]
+ * @returns {import("./types.js").ExtendedResult}
  */
-export function selectRefsExtended(root_element, custom_callback, options = {}) {
-    /** @type {{[key:string]:HTMLElement}} */
-    var refs = {};
-
-    /** @type {{[key:string]:HTMLElement}} */
-    var scope_refs = {};
-
+export function selectRefsExtended(roots, customCallback = null, options = {}) {
+    const config = createConfig(options);
+    /** @type {{ [x: string]: HTMLElement; }} */
+    const refs = {};
+    /** @type {{ [x: string]: HTMLElement; }} */
+    const scopeRefs = {};
     /** @type {HTMLElement[]} */
-    var unnamed_scopes = [];
+    const unnamedScopes = [];
+    const rootList = Array.isArray(roots) ? roots : [roots];
 
-    const config = createCustomConfig(options);
-
-    /**
-     *
-     * @param {HTMLElement} currentNode
-     */
-    function callback(currentNode) {
-        var ref_name = currentNode.getAttribute(config.ref_attr_name);
-
-        if (ref_name != null) {
-            if (ref_name != '') {
-                if (!refs[ref_name]) {
-                    refs[ref_name] = currentNode;
-                } else {
-                    // is real browser
-                    if (globalThis.window) {
-                        console.warn(
-                            `Element has reference #${ref_name} which is already used\n`,
-                            `\nelement: `,
-                            currentNode,
-                            `\nreference #${ref_name}: `,
-                            refs[ref_name],
-                            `\nscope root: `,
-                            root_element
-                        );
-                    } else {
-                        console.warn(`Element has reference #${ref_name} which is already used\n`);
-                    }
-                }
-            }
-        }
-
-        if (currentNode != root_element) {
-            var ref_scope_name = isScopeElement(currentNode, config);
-
-            if (typeof ref_scope_name != 'string') return;
-
-            if (ref_scope_name != '') {
-                if (!scope_refs[ref_scope_name]) {
-                    scope_refs[ref_scope_name] = currentNode;
-                } else {
-                    console.warn(
-                        `scope #${ref_scope_name} is already used`,
-                        globalThis.window ? currentNode : ''
-                    );
-
-                    unnamed_scopes.push(currentNode);
-                }
+    const callback = (/** @type {HTMLElement} */ currentNode) => {
+        // 1. Refs collection
+        const refName = currentNode.getAttribute(config.refAttribute);
+        if (refName) {
+            if (!refs[refName]) {
+                refs[refName] = currentNode;
             } else {
-                unnamed_scopes.push(currentNode);
+                console.warn(`[Scope] Duplicate ref #${refName} found during multi-root scan.`);
             }
         }
 
-        if (custom_callback) custom_callback(currentNode);
-    }
-
-    if (config.includeRoot === true) {
-        if (root_element instanceof config.window.HTMLElement) {
-            refs.root = /** @type {HTMLElement} */ (root_element);
-
-            if (custom_callback) {
-                custom_callback(/** @type {HTMLElement} */ (root_element));
-            }
-        }
-    }
-
-    walkDomScope(root_element, callback, config);
-
-    var index = 0;
-    const SCOPE_AUTO_NAME_PREFIX = config.scope_auto_name_prefix;
-
-    unnamed_scopes.forEach(unnamed_scope_element => {
-        while (scope_refs[SCOPE_AUTO_NAME_PREFIX + index.toString()]) {
-            index++;
-        }
-
-        scope_refs[SCOPE_AUTO_NAME_PREFIX + index.toString()] = unnamed_scope_element;
-    });
-
-    return { refs, scope_refs };
-}
-
-/**
- * Returns an object of child elements containing the data-ref attribute
- * @template {import("./config.js").RefsAnnotation} T
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {T|null} [annotation] - An object specifying the expected types for each reference.
- * @param {import("./config.js").ScopeOptions} [options]
- * @returns {import("./config.js").Refs<T>}
- */
-export function selectRefs(root_element, annotation, options) {
-    /** @type {{[key:string]:HTMLElement}} */
-    var refs = {};
-    const config = createCustomConfig(options);
-
-    /**
-     *
-     * @param {HTMLElement} currentNode
-     */
-    function callback(currentNode) {
-        let ref_name = currentNode.getAttribute(config.ref_attr_name);
-
-        if (ref_name) {
-            if (annotation) {
-                if (annotation[ref_name]) {
-                    refs[ref_name] = currentNode;
+        // 2. Scopes collection
+        // An element is a sub-scope only if it's NOT one of our roots
+        if (!rootList.includes(/** @type {HTMLElement} */ (currentNode))) {
+            const scopeName = isScopeElement(currentNode, config);
+            if (typeof scopeName === 'string') {
+                if (scopeName !== '' && !scopeRefs[scopeName]) {
+                    scopeRefs[scopeName] = currentNode;
+                } else {
+                    unnamedScopes.push(currentNode);
                 }
-            } else {
-                refs[ref_name] = currentNode;
             }
         }
+
+        if (customCallback) customCallback(currentNode);
+    };
+
+    walkDomScope(roots, callback, config);
+
+    // 3. Auto-naming unnamed scopes
+    let index = 0;
+    const prefix = config.scopeAutoNamePrefix;
+    for (const unnamedEl of unnamedScopes) {
+        while (scopeRefs[prefix + index]) index++;
+        scopeRefs[prefix + index] = unnamedEl;
     }
 
-    if (config.includeRoot === true) {
-        if (root_element instanceof config.window.HTMLElement) {
-            refs.root = /** @type {HTMLElement} */ (root_element);
-        }
-    }
-
-    walkDomScope(root_element, callback, config);
-
-    if (annotation) {
-        checkRefs(refs, annotation);
-    }
-
-    return /** @type {import("./types.d.ts").Refs<T>} */ (refs);
+    return { refs, scopeRefs };
 }
 
 /**
- * Walks the DOM tree of the scope and calls the callback for each element
- * @param {Element|HTMLElement|DocumentFragment|ShadowRoot} root_element
- * @param {(currentElement:HTMLElement)=>void} callback
- * @param {import("./config.js").ScopeOptions} [options] the attribute name contains a name of a scope
+ * Selects elements marked with ref attributes within the roots.
+ * * @template {import("./types.js").RefsAnnotation} T
+ * @param {import("./types.js").ScopeRoots} roots
+ * @param {T|null} [annotation] - The schema to validate and type the refs
+ * @param {import("./types.js").ScopeOptions} [options]
+ * @returns {import("./types.js").Refs<T>}
  */
-export function walkDomScope(root_element, callback, options) {
-    const config = createCustomConfig(options);
+export function selectRefs(roots, annotation = null, options = {}) {
+    const config = createConfig(options);
+    /** @type {{ [x: string]: HTMLElement; }} */
+    const refs = {};
 
-    /**
-     * @param {Node} _node
-     * @returns
-     */
-    function scope_filter(_node) {
-        var node = /** @type {HTMLElement} */ (_node);
+    const callback = (/** @type {HTMLElement} */ currentNode) => {
+        const refName = currentNode.getAttribute(config.refAttribute);
+        if (refName) refs[refName] = currentNode;
+    };
 
-        var parentElement = node.parentElement;
+    // Note: refs.root in a multi-root scenario might be ambiguous,
+    // but we'll follow the same logic for all elements in the array.
+    walkDomScope(roots, callback, config);
 
-        if (
-            parentElement &&
-            parentElement != root_element &&
-            isScopeElement(parentElement, config) !== null
-        ) {
-            return /* NodeFilter.FILTER_REJECT */ 2;
+    if (annotation) checkRefs(refs, annotation);
+    return /** @type {import("./types.js").Refs<T>} */ (refs);
+}
+
+/**
+ * Walks one or multiple DOM trees, skipping nested scopes.
+ * @param {import("./types.js").ScopeRoots} roots - Single root or array of roots.
+ * @param {(el: HTMLElement) => void} callback
+ * @param {import("./types.js").ScopeOptions | import("./types.js").ScopeConfig} [options]
+ */
+export function walkDomScope(roots, callback, options) {
+    const config = createConfig(options);
+    const win = config.window;
+
+    // Normalize roots to an array
+    const rootList = Array.isArray(roots) ? roots : [roots];
+
+    for (const root of rootList) {
+        /** @param {Node} node */
+        const filter = node => {
+            const el = /** @type {HTMLElement} */ (node);
+            // If the node is one of our roots, we always accept it
+            if (rootList.includes(el)) return win.NodeFilter.FILTER_ACCEPT;
+
+            const parent = el.parentElement;
+            // Check if we are inside a nested scope within the current root
+            if (parent && !rootList.includes(parent) && isScopeElement(parent, config) !== null) {
+                return win.NodeFilter.FILTER_REJECT;
+            }
+            return win.NodeFilter.FILTER_ACCEPT;
+        };
+
+        const walker = win.document.createTreeWalker(root, win.NodeFilter.SHOW_ELEMENT, {
+            acceptNode: filter,
+        });
+
+        let currentNode;
+        while ((currentNode = /** @type {HTMLElement} */ (walker.nextNode()))) {
+            callback(currentNode);
         }
-
-        return /* NodeFilter.FILTER_ACCEPT */ 1;
-    }
-
-    const tw = config.window.document.createTreeWalker(
-        root_element,
-        /* NodeFilter.SHOW_ELEMENT */ 1,
-        scope_filter
-    );
-
-    var currentNode;
-
-    if (config.includeRoot === true) {
-        if (root_element instanceof config.window.HTMLElement) {
-            callback(/** @type {HTMLElement} */ (root_element));
-        }
-    }
-
-    while ((currentNode = /** @type {HTMLElement} */ (tw.nextNode()))) {
-        callback(currentNode);
     }
 }
 
 /**
- * Validates that all references in the provided `refs` object match the types specified in the `annotation` object.
- * Throws an error if any reference is missing or does not match the expected type.
- *
- * @param {{[key:string]: HTMLElement}} refs - An object containing references with property names as keys.
- * @param {import("./config.js").RefsAnnotation} annotation - An object specifying the expected types for each reference.
- * @throws Will throw an error if a reference is missing or does not match the expected type specified in the annotation.
+ * Validates that all references match the types specified in the annotation.
+ * @param {Object.<string, HTMLElement>} refs
+ * @param {import("./types.js").RefsAnnotation} annotation
+ * @throws {Error} If validation fails.
  */
 export function checkRefs(refs, annotation) {
-    for (let prop in annotation) {
-        let ref = refs[prop];
+    for (const [prop, expectedType] of Object.entries(annotation)) {
+        const ref = refs[prop];
 
         if (!ref) {
-            throw new Error(`Missing data-ref: ${prop}`);
+            throw new Error(`[Scope] Missing required data-ref: "${prop}"`);
         }
 
-        // if type is interface, return prototype
+        const targetProto =
+            typeof expectedType === 'function' ? expectedType.prototype : expectedType;
 
-        const type =
-            typeof annotation[prop] === 'function' ? annotation[prop].prototype : annotation[prop];
+        if (!targetProto.isPrototypeOf(ref)) {
+            const actualName = ref.constructor?.name || 'Unknown';
+            const expectedName = targetProto.constructor?.name || 'ExpectedType';
 
-        if (type.isPrototypeOf(ref) === false) {
             throw new Error(
-                `The data-ref "${prop}" must be an instance of ${type.constructor.name} (actual: ${ref.constructor.name})`
+                `[Scope] Type mismatch for "${prop}": expected ${expectedName}, got ${actualName}`
             );
         }
     }

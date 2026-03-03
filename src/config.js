@@ -1,167 +1,81 @@
 // @ts-check
 
-const SCOPE_ATTR_NAME = 'data-scope';
-const SCOPE_AUTO_NAME_PREFIX = 'unnamed-scope';
-const REF_ATTR_NAME = 'data-ref';
-
 /**
- * @typedef {import("./types.d.ts").RefsAnnotation} RefsAnnotation
+ * @callback IsScopeChecker
+ * @param {Element|HTMLElement} element
+ * @param {ScopeConfig} config
+ * @returns {string|null}
  */
 
-/**
- * @template {RefsAnnotation} T
- * @typedef {import("./types.d.ts").Refs<T>} Refs<T>
- */
 
-/**
- * @typedef {(element:Element|HTMLElement, options:ScopeConfig)=>string|null} TypeIsScopeElement
- * @typedef {{ref_attr_name?:string, scope_ref_attr_name?: string|string[], window?: *, isScopeElement?: TypeIsScopeElement|null, includeRoot?: boolean, scope_auto_name_prefix?: string}} ScopeOptions
- */
-
-/**
- * @typedef {(currentElement:HTMLElement)=>void} SelectRefsCallback
- */
+const DEFAULT_SETTINGS = {
+    REF_ATTR: 'data-ref',
+    SCOPE_ATTR: 'data-scope',
+    AUTO_PREFIX: 'unnamed-scope',
+};
 
 export class ScopeConfig {
-    /** @type {string} */
-    ref_attr_name;
-    /** @type {string|string[]} */
-    scope_ref_attr_name;
-    /** @type {*} */
-    window;
-    /** @type {TypeIsScopeElement|null} */
-    isScopeElement;
-    /** @type {boolean} */
-    includeRoot;
-    /** @type {string} */
-    scope_auto_name_prefix;
-
-    constructor() {
-        this.ref_attr_name = REF_ATTR_NAME;
-        this.scope_ref_attr_name = SCOPE_ATTR_NAME;
-        this.window = globalThis.window;
-        this.isScopeElement = null;
-        this.includeRoot = false;
-        this.scope_auto_name_prefix = SCOPE_AUTO_NAME_PREFIX;
+    /** @param {import("./types.js").ScopeOptions} [options] */
+    constructor(options = {}) {
+        this.refAttribute = options.refAttribute ?? DEFAULT_SETTINGS.REF_ATTR;
+        this.scopeAttribute = options.scopeAttribute ?? DEFAULT_SETTINGS.SCOPE_ATTR;
+        this.window =
+            options.window ?? (typeof globalThis !== 'undefined' ? globalThis.window : undefined);
+        this.isScopeElement = options.isScopeElement ?? null;
+        this.scopeAutoNamePrefix = options.scopeAutoNamePrefix ?? DEFAULT_SETTINGS.AUTO_PREFIX;
     }
 }
 
 /** @type {ScopeConfig} */
-let defaultConfig = new ScopeConfig();
+let defaultInstance = new ScopeConfig();
 
 /**
- * Checks if the element is a scope
+ * Checks if the element is a scope and returns its name.
  * @param {Element|HTMLElement} element
  * @param {ScopeConfig} [config]
- * @returns {null|string} returns scope name or false
+ * @returns {string|null}
  */
-export function isScopeElement(element, config) {
-    var value = null;
-
-    if (!config) config = defaultConfig;
-    let scope_ref_attr_name = config.scope_ref_attr_name || [SCOPE_ATTR_NAME];
-    let isScopeElementFunc = config.isScopeElement;
-
-    if (isScopeElementFunc) {
-        value = isScopeElementFunc(element, config);
-    } else {
-        if (Array.isArray(scope_ref_attr_name)) {
-            for (let i = 0; i < scope_ref_attr_name.length; i++) {
-                value = element.getAttribute(scope_ref_attr_name[i]);
-                if (value !== null) break;
-            }
-        } else {
-            value = element.getAttribute(scope_ref_attr_name);
-        }
+export function isScopeElement(element, config = defaultInstance) {
+    if (config.isScopeElement) {
+        return config.isScopeElement(element, config);
     }
 
-    if (value === null) return null;
+    const attrs = Array.isArray(config.scopeAttribute)
+        ? config.scopeAttribute
+        : [config.scopeAttribute];
 
-    return value;
+    for (const attr of attrs) {
+        const value = element.getAttribute(attr);
+        if (value !== null) return value;
+    }
+
+    return null;
 }
 
 /**
- * Returns a configuration object for the scope.
- *
- * @returns {ScopeConfig} The configuration object.
- * @throws {Error} If 'checkWindow' is true and 'window' is not defined.
- */
-export function getDefaultConfig() {
-    /** @type {ScopeConfig} */
-    return defaultConfig;
-}
-
-/**
- * Creates a custom configuration object for DomScope
- * @param {ScopeOptions} options
+ * Returns the current default configuration.
  * @returns {ScopeConfig}
  */
-export function createCustomConfig(options = {}) {
-    let config = new ScopeConfig();
-
-    config.includeRoot =
-        options.hasOwnProperty('includeRoot') && typeof options.includeRoot !== 'undefined'
-            ? options.includeRoot
-            : defaultConfig.includeRoot;
-    config.scope_auto_name_prefix =
-        options.hasOwnProperty('scope_auto_name_prefix') &&
-        typeof options.scope_auto_name_prefix === 'string'
-            ? options.scope_auto_name_prefix
-            : defaultConfig.scope_auto_name_prefix;
-    config.isScopeElement =
-        options.hasOwnProperty('isScopeElement') && typeof options.isScopeElement !== 'undefined'
-            ? options.isScopeElement
-            : defaultConfig.isScopeElement;
-    config.ref_attr_name =
-        options.hasOwnProperty('ref_attr_name') && typeof options.ref_attr_name === 'string'
-            ? options.ref_attr_name
-            : defaultConfig.ref_attr_name;
-    config.window =
-        options.hasOwnProperty('window') && typeof options.window !== 'undefined'
-            ? options.window
-            : defaultConfig.window;
-
-    if (options.hasOwnProperty('scope_ref_attr_name')) {
-        if (
-            typeof options.scope_ref_attr_name === 'string' ||
-            Array.isArray(options.scope_ref_attr_name)
-        ) {
-            config.scope_ref_attr_name = options.scope_ref_attr_name;
-        }
-    } else {
-        config.scope_ref_attr_name = defaultConfig.scope_ref_attr_name;
-    }
-
-    return config;
+export function getDefaults() {
+    return defaultInstance;
 }
 
 /**
- * Sets default options for DomScope
- * @param {ScopeOptions} [options]
+ * Updates global default settings.
+ * @param {import("./types.js").ScopeOptions} options
+ * @returns {ScopeConfig}
  */
-export function setDefaultConfig(options = {}) {
-    if (options.hasOwnProperty('ref_attr_name') && typeof options.ref_attr_name === 'string')
-        defaultConfig.ref_attr_name = options.ref_attr_name;
-    if (options.hasOwnProperty('window')) defaultConfig.window = options.window;
-    if (options.hasOwnProperty('isScopeElement'))
-        defaultConfig.isScopeElement = options.isScopeElement || defaultConfig.isScopeElement;
-    if (options.hasOwnProperty('includeRoot') && typeof options.includeRoot === 'boolean')
-        defaultConfig.includeRoot = options.includeRoot;
-    if (
-        options.hasOwnProperty('scope_auto_name_prefix') &&
-        typeof options.scope_auto_name_prefix === 'string'
-    )
-        defaultConfig.scope_auto_name_prefix = options.scope_auto_name_prefix;
-    if (options.hasOwnProperty('scope_ref_attr_name')) {
-        if (
-            typeof options.scope_ref_attr_name === 'string' ||
-            Array.isArray(options.scope_ref_attr_name)
-        ) {
-            defaultConfig.scope_ref_attr_name = options.scope_ref_attr_name;
-        }
-    } else {
-        defaultConfig.scope_ref_attr_name = defaultConfig.scope_ref_attr_name;
-    }
+export function setDefaults(options = {}) {
+    defaultInstance = new ScopeConfig({ ...defaultInstance, ...options });
+    return defaultInstance;
+}
 
-    return defaultConfig;
+/**
+ * Ensures we have a valid ScopeConfig instance.
+ * @param {import("./types.js").ScopeOptions | ScopeConfig} [options]
+ * @returns {ScopeConfig}
+ */
+export function createConfig(options = {}) {
+    if (options instanceof ScopeConfig) return options;
+    return new ScopeConfig({ ...defaultInstance, ...options });
 }

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>DomScope - Basic Usage</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "dom-scope": "../../dist/dom-scope.esm.js"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="user-card" data-scope="profile">
+            <h1 data-ref="userName">Loading...</h1>
+            <p data-ref="userStatus">Status: Offline</p>
+            <button data-ref="toggleBtn">Log In</button>
+        </div>
+
+        <script type="module" src="./main.js" async></script>
+    </body>
+</html>

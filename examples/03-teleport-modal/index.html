@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>DomScope - Teleport Pattern</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "dom-scope": "../../dist/dom-scope.esm.js"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="app-root">
+            <h1>My App</h1>
+            <button data-ref="openModal">Open Settings</button>
+        </div>
+
+        <div
+            id="modal-portal"
+            style="
+                display: none;
+                position: fixed;
+                top: 20%;
+                left: 30%;
+                background: white;
+                border: 2px solid black;
+                padding: 20px;
+            "
+        >
+            <h2 data-ref="modalTitle">Settings</h2>
+            <input type="text" data-ref="settingsInput" placeholder="Enter API Key" />
+            <hr />
+            <button data-ref="closeModal">Save & Close</button>
+        </div>
+
+        <script type="module" src="./main.js" async></script>
+    </body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>DomScope - Nested Scopes</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "dom-scope": "../../dist/dom-scope.esm.js"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="dashboard" data-scope="main">
+            <header>
+                <h2 data-ref="title">Admin Dashboard</h2>
+                <button data-ref="refreshBtn">Refresh All</button>
+            </header>
+
+            <section>
+                <div
+                    data-scope="widget"
+                    data-ref="weatherWidget"
+                    style="border: 1px solid #ccc; padding: 10px"
+                >
+                    <h3 data-ref="title">Weather Widget</h3>
+                    <button data-ref="refreshBtn">Update Weather</button>
+                </div>
+            </section>
+        </div>
+
+        <script type="module" src="./main.js" async></script>
+    </body>
+</html>

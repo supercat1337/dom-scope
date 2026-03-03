@@ -1,219 +1,198 @@
 // @ts-check
 
 import { checkRefs, selectRefsExtended, walkDomScope } from './api.js';
-import { createCustomConfig, getDefaultConfig, isScopeElement } from './config.js';
+import { createConfig, isScopeElement } from './config.js';
 
 /**
  * @typedef {Element|HTMLElement|DocumentFragment|ShadowRoot} RootType
  */
 
 /**
- * @template {import("./config.js").RefsAnnotation} T
+ * @template {import("./types.js").RefsAnnotation} T
  */
 export class DomScope {
-    #is_destroyed = false;
-
+    #isDestroyed = false;
     /** @type {RootType} */
-    #root_element;
+    #rootElement;
+    #isInitialized = false;
 
-    /** @type {Boolean} */
-    #first_time_call = true;
-
-    /** @type {import("./config.js").Refs<T>} */
+    /** @type {import("./types.js").Refs<T>} */
     // @ts-ignore
     #refs = {};
 
-    /** @type {{[key:string]:DomScope<T>}} */
+    /** @type {Object.<string, DomScope<any>>} */
     #scopes = {};
 
-    /** @type {import("./config.js").ScopeConfig} */
+    /** @type {import("./types.js").ScopeConfig} */
     config;
 
     /**
      * Creates an instance of DomScope.
-     * @param {RootType} root_element the root element
-     * @param {import("./config.js").ScopeOptions} [options]
+     * @param {RootType} rootElement - The root element for this scope.
+     * @param {import("./types.js").ScopeOptions} [options]
      */
-    constructor(root_element, options) {
-        if (root_element == null) throw new Error('root_element is null');
-
-        this.#root_element = root_element;
-        this.config = createCustomConfig(options);
-    }
-
-    /**
-     * Returns the root element
-     * @type {RootType}
-     */
-    get root() {
-        return this.#root_element;
-    }
-
-    /**
-     * Returns the object containing html elements with data-ref attribute
-     * @type {import("./config.js").Refs<T>}
-     * */
-    get refs() {
-        if (this.#first_time_call) {
-            this.update();
+    constructor(rootElement, options) {
+        if (!rootElement) {
+            throw new Error('[DomScope] rootElement is required');
         }
 
+        this.#rootElement = rootElement;
+        // Config is created once and reused for all operations in this instance
+        this.config = createConfig(options);
+    }
+
+    /** @returns {RootType} */
+    get root() {
+        return this.#rootElement;
+    }
+
+    /** @returns {import("./types.js").Refs<T>} */
+    get refs() {
+        if (!this.#isInitialized) {
+            this.update();
+        }
         return this.#refs;
     }
 
-    /**
-     * Returns the object containing children DomScopes
-     * @type {{[key:string]:DomScope<T>}}
-     * */
+    /** @returns {Object.<string, DomScope<any>>} */
     get scopes() {
-        if (this.#first_time_call) {
+        if (!this.#isInitialized) {
             this.update();
         }
-
         return this.#scopes;
     }
 
     /**
-     * Updates refs and scopes objects
-     * @param {(currentElement:Element|HTMLElement)=>void} [callback]
+     * Updates refs and child scopes by re-scanning the DOM.
+     * @param {((el: HTMLElement) => void)} [callback]
      */
     update(callback) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
+        this.#ensureNotDestroyed();
 
-        let { refs, scope_refs } = selectRefsExtended(this.#root_element, callback, this.config);
+        const { refs, scopeRefs } = selectRefsExtended(this.#rootElement, callback, this.config);
 
-        this.#refs = /** @type {import("./config.js").Refs<T>} */ (refs);
+        this.#refs = /** @type {import("./types.js").Refs<T>} */ (refs);
 
-        /** @type {{[key:string]:DomScope<any>}} */
-        let dom_scopes = {};
+        /** @type {Object.<string, DomScope<any>>} */
+        const childScopes = {};
 
-        for (let scope_name in scope_refs) {
-            dom_scopes[scope_name] = new DomScope(scope_refs[scope_name], this.config);
+        for (const [name, element] of Object.entries(scopeRefs)) {
+            // We pass the same config instance to preserve settings down the tree
+            childScopes[name] = new DomScope(element, this.config);
         }
 
-        this.#scopes = dom_scopes;
-        this.#first_time_call = false;
+        this.#scopes = childScopes;
+        this.#isInitialized = true;
     }
 
     /**
-     * Searches an element with css selector in current DomScope
+     * Finds the first element matching the selector within the current scope only.
      * @param {string} query
-     * @returns {null|Element}
+     * @returns {HTMLElement|null}
      */
     querySelector(query) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
-
-        let result = this.querySelectorAll(query);
-        if (result.length == 0) return null;
-
-        return result[0];
+        this.#ensureNotDestroyed();
+        const results = this.querySelectorAll(query);
+        return results.length > 0 ? results[0] : null;
     }
 
     /**
-     * Searches elements with css selector in current DomScope
+     * Finds all elements matching the selector that belong to the current scope.
      * @param {string} query
      * @returns {HTMLElement[]}
      */
     querySelectorAll(query) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
+        this.#ensureNotDestroyed();
 
-        var found_results = this.#root_element.querySelectorAll(query);
-        if (found_results.length == 0) return [];
+        const found = this.#rootElement.querySelectorAll(query);
+        if (found.length === 0) return [];
 
-        /** @type {HTMLElement[]} */
-        var result = [];
-
-        for (let i = 0; i < found_results.length; i++) {
-            if (this.contains(found_results[i], true))
-                result.push(/** @type {HTMLElement} */ (found_results[i]));
+        const results = [];
+        // @ts-ignore
+        for (const node of found) {
+            const el = /** @type {HTMLElement} */ (node);
+            if (this.contains(el, true)) {
+                results.push(el);
+            }
         }
 
-        return result;
+        return results;
     }
 
     /**
-     * Check if current DomScope constains the element
+     * Checks if an element belongs to this scope (not nested in child scopes).
      * @param {Node} element
-     * @param {boolean} [check_only_child_scopes=false]
-     * @returns {Boolean}
+     * @param {boolean} [checkOnlyChildScopes=false]
+     * @returns {boolean}
      */
-    contains(element, check_only_child_scopes = false) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
+    contains(element, checkOnlyChildScopes = false) {
+        this.#ensureNotDestroyed();
 
-        if (check_only_child_scopes === false) {
-            if (!this.#root_element.contains(element)) return false;
+        if (!checkOnlyChildScopes) {
+            if (!this.#rootElement.contains(element)) return false;
         }
 
-        var scopes = this.scopes;
-
-        for (let scope_name in scopes) {
-            let child_scope = scopes[scope_name];
-            if (child_scope.#root_element == element) return true;
-            if (child_scope.#root_element.contains(element)) return false;
+        const childScopes = this.scopes;
+        for (const scopeName in childScopes) {
+            const childRoot = childScopes[scopeName].root;
+            if (childRoot === element) return true;
+            if (childRoot.contains(element)) return false;
         }
 
         return true;
     }
 
     /**
-     * Walks through all elements in the scope
-     * @param {(currentElement:HTMLElement)=>void} callback
+     * Walks through all elements belonging to this scope.
+     * @param {(el: HTMLElement) => void} callback
      */
     walk(callback) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
-
-        walkDomScope(this.#root_element, callback, this.config);
+        this.#ensureNotDestroyed();
+        walkDomScope(this.#rootElement, callback, this.config);
     }
 
     /**
-     * Destroys the instance
+     * Cleans up the instance and breaks references to DOM elements.
      */
     destroy() {
-        this.#is_destroyed = true;
-
+        this.#isDestroyed = true;
+        this.#isInitialized = false;
+        
         // @ts-ignore
-        this.#root_element = null;
-
-        this.#first_time_call = false;
-
+        this.#rootElement = null;
         // @ts-ignore
         this.#refs = {};
-
         this.#scopes = {};
-
         // @ts-ignore
-        this.config = {};
+        this.config = null;
+    }
+
+    /** @returns {boolean} */
+    get isDestroyed() {
+        return this.#isDestroyed;
     }
 
     /**
-     * Checks if element is scope
+     * Helper to check if an element is a scope according to current config.
      * @param {Element|HTMLElement} element
      * @returns {boolean}
      */
     isScopeElement(element) {
-        return !!isScopeElement(element, this.config);
+        return isScopeElement(element, this.config) !== null;
     }
 
     /**
-     * Checks if the instance was destroyed
-     * @returns {boolean} true if the instance was destroyed
-     */
-    get isDestroyed() {
-        return this.#is_destroyed;
-    }
-
-    /**
-     * Checks if all references in the scope are correct. If not, throws an error
-     * @param {import("./config.js").RefsAnnotation} annotation Object with property names as keys and function constructors as values
-     * @example
-     * const scope = new DomScope(my_element);
-     * scope.checkRefs({
-     *     my_button: HTMLButtonElement,
-     *     my_input: HTMLInputElement
-     * });
+     * Validates refs against an annotation.
+     * @param {import("./types.js").RefsAnnotation} annotation
      */
     checkRefs(annotation) {
-        if (this.#is_destroyed) throw new Error('Object is already destroyed');
+        this.#ensureNotDestroyed();
         checkRefs(this.refs, annotation);
+    }
+
+    #ensureNotDestroyed() {
+        if (this.#isDestroyed) {
+            throw new Error('[DomScope] Instance is destroyed');
+        }
     }
 }

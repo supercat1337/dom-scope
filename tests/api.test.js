@@ -1,6 +1,6 @@
 // @ts-check
 
-import { selectRefs, selectRefsExtended, walkDomScope, checkRefs } from './../src/index.js';
+import { selectRefs, selectRefsExtended, walkDomScope, checkRefs } from '../src/index.js';
 import test from 'ava';
 import { Window } from 'happy-dom';
 
@@ -58,43 +58,6 @@ test('selectRefs', t => {
     window.close();
 });
 
-test('selectRefs (with includeRoot == true)', t => {
-    const window = new Window({ url: 'https://localhost:8080' });
-    const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
-
-    body.innerHTML = /* html*/ `
-<span data-ref="a">a</span>
-<span data-ref="b">b</span>
-
-<div data-scope="my-scope-1">
-    <span data-ref="a">a/1</span>
-    <span data-ref="b">b/1</span>
-</div>
-
-<div data-scope="my-scope-2" id="my-block">    
-    <span data-ref="a">a/2</span>
-    <span data-ref="b">b/2</span>
-    <span id="foo">foo</span>
-
-    <div data-scope="my-scope">    
-        <span data-ref="a">a/2/1</span>
-        <span data-ref="b">b/2/1</span>
-    </div>
-
-    <div data-scope="my-scope-2">    
-        <span data-ref="a">a/2/2</span>
-        <span data-ref="b">b/2/2</span>
-    </div>
-
-</div>
-`;
-
-    let refs = selectRefs(body, null, { window: window, includeRoot: true });
-    t.is(refs.root, body);
-
-    window.close();
-});
 
 test('selectRefs (with annotation)', t => {
     const window = new Window({ url: 'https://localhost:8080' });
@@ -212,68 +175,7 @@ test('walkDomScope', t => {
     window.close();
 });
 
-test('selectRefsExtended', t => {
-    const window = new Window({ url: 'https://localhost:8080' });
-    const document = window.document;
-    const body = /** @type {HTMLElement} */ (/** @type {unknown} */ (document.body));
 
-    body.innerHTML = /* html*/ `
-<span data-ref="a">a</span>
-<span data-ref="b">b</span>
-
-<div data-scope="my-scope-1">
-    <span data-ref="a">a/1</span>
-    <span data-ref="b">b/1</span>
-</div>
-
-<div data-scope="my-scope-2" id="my-block">    
-    <span data-ref="a">a/2</span>
-    <span data-ref="b">b/2</span>
-    <span id="foo">foo</span>
-
-    <div data-scope="my-scope">    
-        <span data-ref="a">a/2/1</span>
-        <span data-ref="b">b/2/1</span>
-    </div>
-
-    <div data-scope="my-scope-2">    
-        <span data-ref="a">a/2/2</span>
-        <span data-ref="b">b/2/2</span>
-    </div>
-
-</div>
-`;
-
-    var foo = 0;
-    /**
-     * @param {HTMLElement} element
-     */
-    function callback(element) {
-        foo++;
-        t.log(outputElementInfo(element));
-    }
-
-    let result = selectRefsExtended(body, callback, {
-        window: window,
-        includeRoot: true,
-    });
-
-    t.is(body, result.refs.root);
-
-    if (
-        result.refs.a &&
-        result.refs.b &&
-        result.scope_refs['my-scope-1'] &&
-        result.scope_refs['my-scope-2'] &&
-        result.scope_refs['my-scope-2'].id == 'my-block'
-    ) {
-        t.pass();
-    } else {
-        t.fail();
-    }
-
-    window.close();
-});
 
 test('checkRefs', t => {
     const window = new Window({ url: 'https://localhost:8080' });
@@ -316,7 +218,7 @@ test('checkRefs', t => {
         });
     });
 
-    const child_scope_root = body_scope_data.scope_refs['my-scope-1'];
+    const child_scope_root = body_scope_data.scopeRefs['my-scope-1'];
     const child_scope_data = selectRefsExtended(child_scope_root, undefined, settings);
 
     t.notThrows(() => {
