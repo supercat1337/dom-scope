@@ -44,7 +44,7 @@ export interface ScopeOptions {
 
 /** * Internal configuration object used by the API.
  */
-export interface ScopeConfig extends Required<Omit<ScopeOptions, 'isScopeElement' | 'window' | 'scopeAttribute'>> {
+export interface IScopeConfig extends Required<Omit<ScopeOptions, 'isScopeElement' | 'window' | 'scopeAttribute'>> {
     /** Global window object - always present in the processed config */
     window: any;
     /** Attribute(s) for scopes - normalized to string or array */
@@ -77,8 +77,8 @@ export class DomScope<T extends RefsAnnotation> {
      * @param {ScopeOptions} [options]
      */
     constructor(rootElement: RootType, options?: ScopeOptions);
-    /** @type {ScopeConfig} */
-    config: ScopeConfig;
+    /** @type {IScopeConfig} */
+    config: IScopeConfig;
     /** @returns {RootType} */
     get root(): RootType;
     /** @returns {Refs<T>} */
@@ -171,9 +171,9 @@ export function setDefaults(options?: ScopeOptions): ScopeConfig;
  * Walks one or multiple DOM trees, skipping nested scopes.
  * @param {ScopeRoots} roots - Single root or array of roots.
  * @param {(el: HTMLElement) => void} callback
- * @param {ScopeOptions | ScopeConfig} [options]
+ * @param {ScopeOptions | IScopeConfig} [options]
  */
-export function walkDomScope(roots: ScopeRoots, callback: (el: HTMLElement) => void, options?: ScopeOptions | ScopeConfig): void;
+export function walkDomScope(roots: ScopeRoots, callback: (el: HTMLElement) => void, options?: ScopeOptions | IScopeConfig): void;
 declare class ScopeConfig {
     /** @param {ScopeOptions} [options] */
     constructor(options?: ScopeOptions);

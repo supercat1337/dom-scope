@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
     AUTO_PREFIX: 'unnamed-scope',
 };
 
+
 class ScopeConfig {
     /** @param {import("./types.js").ScopeOptions} [options] */
     constructor(options = {}) {

@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
     AUTO_PREFIX: 'unnamed-scope',
 };
 
+
 class ScopeConfig {
     /** @param {import("./dom-scope.esm.d.ts").ScopeOptions} [options] */
     constructor(options = {}) {
@@ -162,7 +163,7 @@ function selectRefs(roots, annotation = null, options = {}) {
  * Walks one or multiple DOM trees, skipping nested scopes.
  * @param {import("./dom-scope.esm.d.ts").ScopeRoots} roots - Single root or array of roots.
  * @param {(el: HTMLElement) => void} callback
- * @param {import("./dom-scope.esm.d.ts").ScopeOptions | import("./dom-scope.esm.d.ts").ScopeConfig} [options]
+ * @param {import("./dom-scope.esm.d.ts").ScopeOptions | import("./dom-scope.esm.d.ts").IScopeConfig} [options]
  */
 function walkDomScope(roots, callback, options) {
     const config = createConfig(options);
@@ -248,7 +249,7 @@ class DomScope {
     /** @type {Object.<string, DomScope<any>>} */
     #scopes = {};
 
-    /** @type {import("./dom-scope.esm.d.ts").ScopeConfig} */
+    /** @type {import("./dom-scope.esm.d.ts").IScopeConfig} */
     config;
 
     /**

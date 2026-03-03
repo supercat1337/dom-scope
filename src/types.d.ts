@@ -44,7 +44,7 @@ export interface ScopeOptions {
 
 /** * Internal configuration object used by the API.
  */
-export interface ScopeConfig extends Required<Omit<ScopeOptions, 'isScopeElement' | 'window' | 'scopeAttribute'>> {
+export interface IScopeConfig extends Required<Omit<ScopeOptions, 'isScopeElement' | 'window' | 'scopeAttribute'>> {
     /** Global window object - always present in the processed config */
     window: any;
     /** Attribute(s) for scopes - normalized to string or array */

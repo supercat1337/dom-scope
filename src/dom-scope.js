@@ -23,7 +23,7 @@ export class DomScope {
     /** @type {Object.<string, DomScope<any>>} */
     #scopes = {};
 
-    /** @type {import("./types.js").ScopeConfig} */
+    /** @type {import("./types.js").IScopeConfig} */
     config;
 
     /**

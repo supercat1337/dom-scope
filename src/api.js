@@ -89,7 +89,7 @@ export function selectRefs(roots, annotation = null, options = {}) {
  * Walks one or multiple DOM trees, skipping nested scopes.
  * @param {import("./types.js").ScopeRoots} roots - Single root or array of roots.
  * @param {(el: HTMLElement) => void} callback
- * @param {import("./types.js").ScopeOptions | import("./types.js").ScopeConfig} [options]
+ * @param {import("./types.js").ScopeOptions | import("./types.js").IScopeConfig} [options]
  */
 export function walkDomScope(roots, callback, options) {
     const config = createConfig(options);

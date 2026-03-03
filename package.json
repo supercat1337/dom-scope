@@ -1,7 +1,7 @@
 {
     "name": "dom-scope",
-    "version": "2.1.1",
-    "description": "Creates a scope within the DOM",
+    "version": "2.1.2",
+    "description": "Lightweight, typesafe DOM scoping and reference management library.",
     "homepage": "https://github.com/supercat1337/dom-scope",
     "repository": {
         "url": "https://github.com/supercat1337/dom-scope"
@@ -16,12 +16,22 @@
         }
     },
     "keywords": [
-        "dom-scope",
-        "local id",
-        "html",
         "dom",
-        "supercat1337",
-        "supercat"
+        "scope",
+        "dom-scope",
+        "refs",
+        "isolated-dom",
+        "typescript",
+        "typing",
+        "vanilla-js",
+        "web-components",
+        "shadow-dom",
+        "ssr",
+        "jsdom",
+        "tree-walker",
+        "dom-traversal",
+        "component-logic",
+        "frontend"
     ],
     "scripts": {
         "test": "c8 ava",
